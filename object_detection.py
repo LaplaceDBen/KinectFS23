@@ -29,7 +29,7 @@ def main():
             gray = cv2.cvtColor(capture.color[:, :, :3], cv2.COLOR_BGR2GRAY)
 
             # Detect edges using Canny
-            edges = cv2.Canny(gray, 100, 200)
+            edges = cv2.Canny(gray, 100, 110)
 
             # Find contours of objects
             contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
