@@ -88,6 +88,7 @@ def detect_objects(image_path, accuracy_threshold, max_size_ratio):
     return df, image
 
 def live_depth():
+    #Modifikation of viewer depth
     k4a = PyK4A(
         Config(
             color_resolution=pyk4a.ColorResolution.OFF,
