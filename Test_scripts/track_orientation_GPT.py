@@ -47,4 +47,4 @@ def track_orientation(min_size):
     cv2.destroyAllWindows()
 
 # Test the function with a minimum object size of 50 pixels
-track_orientation(50)
+track_orientation(1000)
