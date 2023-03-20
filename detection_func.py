@@ -1,6 +1,6 @@
 import pyk4a
 from helpers import colorize
-from pyk4a import Config, PyK4A
+from pyk4a import Config, PyK4A, connected_device_count
 import numpy as np
 import pandas as pd
 import cv2
