@@ -57,6 +57,20 @@ def edge_detection_comparison():
     print(f"Scharr_x edge detection execution time: {np.mean(sc_x):.6f} ms")
     print(f"Scharr_y edge detection execution time: {np.mean(sc_y):.6f} ms")
 
+    #histogram of each method
+    plt.figure(figsize=(10, 8))
+    plt.hist(c, bins=20, label='Canny')
+    plt.hist(l, bins=20, label='Laplacian')
+    plt.hist(s_x, bins=20, label='Sobel_x')
+    plt.hist(s_y, bins=20, label='Sobel_y')
+    plt.hist(sc_x, bins=20, label='Scharr_x')
+    plt.hist(sc_y, bins=20, label='Scharr_y')
+    plt.xlabel('Execution time (ms)')
+    plt.ylabel('Frequency')
+    plt.legend()
+    plt.show()
+
+
     #plot the execution times for each method in an ecdf plot
 
     sns.set_style("whitegrid")
@@ -71,7 +85,7 @@ def edge_detection_comparison():
     plt.ylabel('ECDF')
     plt.legend()
     plt.show()
-    plt.savefig('images\edge_detection_comparison.png')
+
 
     #make a boxplot of each method
 
@@ -80,7 +94,10 @@ def edge_detection_comparison():
     plt.xlabel('Edge detection method')
     plt.ylabel('Execution time (ms)')
     plt.show()
-    plt.savefig('images\edge_detection_comparison_boxplot.png')
+
+    
+
+
 
 
 
