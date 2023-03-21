@@ -5,13 +5,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 
-def edge_detection_comparison(img):
-    img = cv2.imread(img)
-    # Convert the image to grayscale
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-    # Apply Gaussian blur to the image to reduce noise
-    blur = cv2.GaussianBlur(gray, (5, 5), 0)
+def edge_detection_comparison():
+    cap = cv2.VideoCapture(0)
     
 
 
@@ -24,6 +19,14 @@ def edge_detection_comparison(img):
     # Apply different edge detection methods and measure their execution time
     i=0
     while i <1000:
+        ret, frame = cap.read() # read a frame from the camera
+        
+        # Convert the frame to grayscale
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+        # Apply Gaussian blur to the frame to reduce noise
+        blur = cv2.GaussianBlur(gray, (5, 5), 0)
+        
         t1 = time.time()
         canny = cv2.Canny(blur, 100, 200)
         t2 = time.time()
@@ -70,20 +73,16 @@ def edge_detection_comparison(img):
     plt.show()
     plt.savefig('images\edge_detection_comparison.png')
 
-    #plot the mean and std of the execution times for each method 
+    #make a boxplot of each method
 
-    sns.set_style("whitegrid")
     plt.figure(figsize=(10, 8))
-    plt.bar(['Canny', 'Laplacian', 'Sobel_x', 'Sobel_y', 'Scharr_x', 'Scharr_y'], 
-            [np.mean(c), np.mean(l), np.mean(s_x), np.mean(s_y), np.mean(sc_x), np.mean(sc_y)],
-              yerr=[np.std(c), np.std(l), np.std(s_x), np.std(s_y), np.std(sc_x), np.std(sc_y)], capsize=10)
+    plt.boxplot([c, l, s_x, s_y, sc_x, sc_y], labels=['Canny', 'Laplacian', 'Sobel_x', 'Sobel_y', 'Scharr_x', 'Scharr_y'])
     plt.xlabel('Edge detection method')
     plt.ylabel('Execution time (ms)')
-    plt.title('Mean and std of the execution times for each method')
     plt.show()
-    plt.savefig('images\edge_detection_comparison_mean_std.png')
+    plt.savefig('images\edge_detection_comparison_boxplot.png')
 
 
 
 
-edge_detection_comparison('images\Formen.jpg')
+edge_detection_comparison()
