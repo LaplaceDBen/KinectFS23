@@ -11,8 +11,8 @@ vertices= (
     (-1, 1, -1),
     (-1, -1, -1),
     (1, -1, 1),
-    (1, 1, 4),
-    (-1, -1, 4),
+    (1, 1, 1),
+    (-1, -1, 1),
     (-1, 1, 1)
 )
 
@@ -162,6 +162,9 @@ def main():
         # update display
         pygame.display.flip()
         # update loop sleep
+        #print coordinates of cube
+        print(glGetDoublev(GL_MODELVIEW_MATRIX))
+
         pygame.time.wait(10)
         
 main()
