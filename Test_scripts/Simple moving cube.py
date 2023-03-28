@@ -91,10 +91,10 @@ def main():
     #  because they are in relation to your perspective,
     #  not in relation to your actual location within the
     #  3D environment."
-    gluPerspective(45, (display[0] / display[1]), 0.1, 50.0)
+    gluPerspective(45, (display[0] / display[1]), 0.01, 500.0)
 
     # move perspective by x, y, z (-5 to be back from cube)
-    glTranslatef(0.0,0.0, -5)
+    glTranslatef(0.0,0.0, -50)
 
     glRotatef(25, 2, 1, 0)
     left = 0
@@ -106,6 +106,7 @@ def main():
         # pygame events
 
         if left:
+
             right, down, up = 0, 0, 0
             glTranslatef(-0.1,0,0)
         if right:
