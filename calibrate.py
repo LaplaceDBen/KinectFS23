@@ -21,8 +21,10 @@ def detect_area():
     # Apply a threshold to the image
     ret, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)
 
+    edges = cv2.Canny(gray, 100, 200)
     # Find contours in the image
-    contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    #edge detection with canny to esure that the contour is sharp
+    contours, hierarchy = cv2.findContours(edges,thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
     # Find the contour with the largest area
     max_area = 0
