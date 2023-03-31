@@ -86,6 +86,9 @@ class Detection:
 
         # Create a Pandas dataframe from the objects list
         df = pd.DataFrame
+        df = pd.DataFrame(objects, columns=['area', 'centerpoint', 'accuracy'])
+        
+        return df, image
 
     @staticmethod
     def live_depth():
