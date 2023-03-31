@@ -68,4 +68,4 @@ layout.addWidget(stop_button)
 layout.addWidget(log_window)
 
 window.show()
-sys.exit(app.exec_())
+sys.exit(app.exec())
