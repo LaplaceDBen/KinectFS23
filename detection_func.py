@@ -5,201 +5,205 @@ import numpy as np
 import pandas as pd
 import cv2
 
-def devices():
-    cnt = connected_device_count()
-    if not cnt:
-        print("No devices available")
-        exit()
-    print(f"Available devices: {cnt}")
-    for device_id in range(cnt):
-        device = PyK4A(device_id=device_id)
-        device.open()
-        print(f"{device_id}: {device.serial}")
-        device.close()
-        return device_id
-    
-def detect_objects(image_path, accuracy_threshold, max_size_ratio):
 
-    # ChatGPT
-    image = cv2.imread(image_path)
+class MyK4AClass:
+    def __init__(self):
+        self.device_id = self.get_device_id()
 
-    # Convert to grayscale
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    @staticmethod
+    def get_device_id():
+        cnt = connected_device_count()
+        if not cnt:
+            print("No devices available")
+            exit()
+        print(f"Available devices: {cnt}")
+        for device_id in range(cnt):
+            device = PyK4A(device_id=device_id)
+            device.open()
+            print(f"{device_id}: {device.serial}")
+            device.close()
+            return device_id
+    @staticmethod
+    def detect_objects( image_path, accuracy_threshold, max_size_ratio):
+        # ChatGPT
+        image = cv2.imread(image_path)
 
-    # Threshold the image
-    _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+        # Convert to grayscale
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-    # Find contours in the image
-    contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        # Threshold the image
+        _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
 
-    # Create a list to store the size, centerpoint, and accuracy of each object
-    objects = []
+        # Find contours in the image
+        contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
-    # Iterate through the contours and append the size, centerpoint, and accuracy to the objects list
-    for contour in contours:
-        # Get the area of the contour
-        area = cv2.contourArea(contour)
+        # Create a list to store the size, centerpoint, and accuracy of each object
+        objects = []
 
-        # Skip contours with zero area
-        if area == 0:
-            continue
+        # Iterate through the contours and append the size, centerpoint, and accuracy to the objects list
+        for contour in contours:
+            # Get the area of the contour
+            area = cv2.contourArea(contour)
 
-        # Get the moments of the contour
-        moments = cv2.moments(contour)
+            # Skip contours with zero area
+            if area == 0:
+                continue
 
-        # Calculate the centroid of the contour
-        cx = int(moments['m10'] / moments['m00'])
-        cy = int(moments['m01'] / moments['m00'])
+            # Get the moments of the contour
+            moments = cv2.moments(contour)
 
-        # Get the perimeter of the contour
-        perimeter = cv2.arcLength(contour, True)
+            # Calculate the centroid of the contour
+            cx = int(moments['m10'] / moments['m00'])
+            cy = int(moments['m01'] / moments['m00'])
 
-        # Approximate the shape of the contour as a polygon
-        approx = cv2.approxPolyDP(contour, 0.04 * perimeter, True)
+            # Get the perimeter of the contour
+            perimeter = cv2.arcLength(contour, True)
 
-        # Calculate the number of vertices in the polygon
-        vertices = len(approx)
+            # Approximate the shape of the contour as a polygon
+            approx = cv2.approxPolyDP(contour, 0.04 * perimeter, True)
 
-        # Calculate the accuracy of the polygon to a square
-        accuracy = abs(1 - (area / (perimeter ** 2 / 4)))
+            # Calculate the number of vertices in the polygon
+            vertices = len(approx)
 
-        # Check if the object is too large
-        height, width = image.shape[:2]
-        size_ratio = area / (height * width)
-        if size_ratio > max_size_ratio:
-            continue
+            # Calculate the accuracy of the polygon to a square
+            accuracy = abs(1 - (area / (perimeter ** 2 / 4)))
 
-        # Append the size, centerpoint, and accuracy to the objects list
-        objects.append([area, (cx, cy), accuracy])
+            # Check if the object is too large
+            height, width = image.shape[:2]
+            size_ratio = area / (height * width)
+            if size_ratio > max_size_ratio:
+                continue
 
-        # Draw the contour and centerpoint if the accuracy is above the threshold
-        if accuracy > accuracy_threshold:
-            cv2.drawContours(image, [contour], -1, (255, 255, 255), 2)
-            cv2.drawMarker(image, (cx, cy), (0, 0, 255), cv2.MARKER_CROSS, 10, 2)
-            #add area to contour on image 
-            cv2.putText(image, str(area), (cx, cy), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+            # Append the size, centerpoint, and accuracy to the objects list
+            objects.append([area, (cx, cy), accuracy])
 
+            # Draw the contour and centerpoint if the accuracy is above the threshold
+            if accuracy > accuracy_threshold:
+                cv2.drawContours(image, [contour], -1, (255, 255, 255), 2)
+                cv2.drawMarker(image, (cx, cy), (0, 0, 255), cv2.MARKER_CROSS, 10, 2)
+                # add area to contour on image
+                cv2.putText(image, str(area), (cx, cy), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
 
+        # Create a Pandas dataframe from the objects list
+        df = pd.DataFrame
 
-    # Create a Pandas dataframe from the objects list
-    df = pd.DataFrame(objects, columns=["Size", "Centerpoint", "Accuracy"])
+    @staticmethod
+    def live_depth():
 
-    # Return the dataframe and the image with selected objects drawn on it
-    return df, image
-
-def live_depth():
-
-    #Modifikation of viewer depth
-    k4a = PyK4A(
-        Config(
-            color_resolution=pyk4a.ColorResolution.OFF,
-            depth_mode=pyk4a.DepthMode.NFOV_UNBINNED,
-            synchronized_images_only=False,
+        #Modifikation of viewer depth
+        k4a = PyK4A(
+            Config(
+                color_resolution=pyk4a.ColorResolution.OFF,
+                depth_mode=pyk4a.DepthMode.NFOV_UNBINNED,
+                synchronized_images_only=False,
+            )
         )
-    )
-    k4a.start()
+        k4a.start()
 
-    # getters and setters directly get and set on device
-    k4a.whitebalance = 4500
-    assert k4a.whitebalance == 4500
-    k4a.whitebalance = 4510
-    assert k4a.whitebalance == 4510
+        # getters and setters directly get and set on device
+        k4a.whitebalance = 4500
+        assert k4a.whitebalance == 4500
+        k4a.whitebalance = 4510
+        assert k4a.whitebalance == 4510
 
-    while True:
-        capture = k4a.get_capture()
-        if np.any(capture.depth):
-            # Convert depth image to a normalized 8-bit image
-            depth_norm = cv2.normalize(capture.depth, None, 0, 255, cv2.NORM_MINMAX, cv2.CV_8UC1)
+        while True:
+            capture = k4a.get_capture()
+            if np.any(capture.depth):
+                # Convert depth image to a normalized 8-bit image
+                depth_norm = cv2.normalize(capture.depth, None, 0, 255, cv2.NORM_MINMAX, cv2.CV_8UC1)
 
-            # Apply a threshold to create a binary image
-            _, threshold = cv2.threshold(depth_norm, 100, 255, cv2.THRESH_BINARY)
+                # Apply a threshold to create a binary image
+                _, threshold = cv2.threshold(depth_norm, 100, 255, cv2.THRESH_BINARY)
 
-            # Find contours in the binary image
-            contours, _ = cv2.findContours(threshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                # Find contours in the binary image
+                contours, _ = cv2.findContours(threshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-            closest_depth = float('inf')
+                closest_depth = float('inf')
 
-            # Loop through each contour
-            for contour in contours:
-                # Calculate the depth of the object by finding the mean depth value within the contour
-                mask = np.zeros_like(capture.depth)
-                cv2.drawContours(mask, [contour], 0, 255, -1)
-                depth_values = capture.depth[np.where(mask > 0)]
-                depth = np.mean(depth_values)
+                # Loop through each contour
+                for contour in contours:
+                    # Calculate the depth of the object by finding the mean depth value within the contour
+                    mask = np.zeros_like(capture.depth)
+                    cv2.drawContours(mask, [contour], 0, 255, -1)
+                    depth_values = capture.depth[np.where(mask > 0)]
+                    depth = np.mean(depth_values)
 
-                if depth < closest_depth:
-                    closest_depth = depth
+                    if depth < closest_depth:
+                        closest_depth = depth
 
-            # Write the closest depth in black
-            cv2.putText(depth_norm, f"Depth: {closest_depth:.2f} mm", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
+                # Write the closest depth in black
+                cv2.putText(depth_norm, f"Depth: {closest_depth:.2f} mm", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
 
-            cv2.imshow("k4a", colorize(depth_norm, (None, 5000), cv2.COLORMAP_HSV))
-            key = cv2.waitKey(10)
-            if key != -1:
-                cv2.destroyAllWindows()
-                break
+                cv2.imshow("k4a", colorize(depth_norm, (None, 5000), cv2.COLORMAP_HSV))
+                key = cv2.waitKey(10)
+                if key != -1:
+                    cv2.destroyAllWindows()
+                    break
 
-    k4a.stop()
+        k4a.stop()
 
-def largest_rectangle():
-    #Generated by CHATGPT
-    k4a = PyK4A(
-        Config(
-            color_resolution=pyk4a.ColorResolution.RES_720P,
-            depth_mode=pyk4a.DepthMode.NFOV_UNBINNED,
-            synchronized_images_only=True,
+    @staticmethod
+    def largest_rectangle():
+        #Generated by CHATGPT
+        k4a = PyK4A(
+            Config(
+                color_resolution=pyk4a.ColorResolution.RES_720P,
+                depth_mode=pyk4a.DepthMode.NFOV_UNBINNED,
+                synchronized_images_only=True,
+            )
         )
-    )
-    k4a.start()
+        k4a.start()
 
-    # getters and setters directly get and set on device
-    k4a.whitebalance = 4500
-    assert k4a.whitebalance == 4500
-    k4a.whitebalance = 4510
-    assert k4a.whitebalance == 4510
+        # getters and setters directly get and set on device
+        k4a.whitebalance = 4500
+        assert k4a.whitebalance == 4500
+        k4a.whitebalance = 4510
+        assert k4a.whitebalance == 4510
 
-    max_rect_area = 0  # Variable to store the largest rectangle area found
-    while True:
-        capture = k4a.get_capture()
-        if np.any(capture.color):
-            # Convert the color image to grayscale
-            gray = cv2.cvtColor(capture.color, cv2.COLOR_BGR2GRAY)
+        max_rect_area = 0  # Variable to store the largest rectangle area found
+        while True:
+            capture = k4a.get_capture()
+            if np.any(capture.color):
+                # Convert the color image to grayscale
+                gray = cv2.cvtColor(capture.color, cv2.COLOR_BGR2GRAY)
 
-            # Apply Canny edge detection to the grayscale image
-            edges = cv2.Canny(gray, 100, 200)
+                # Apply Canny edge detection to the grayscale image
+                edges = cv2.Canny(gray, 100, 200)
 
-            # Find contours in the edge map
-            contours, hierarchy = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+                # Find contours in the edge map
+                contours, hierarchy = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
-            # Loop over the contours and find rectangular ones
-            for cnt in contours:
-                # Approximate the contour to a polygon
-                approx = cv2.approxPolyDP(cnt, 0.01 * cv2.arcLength(cnt, True), True)
+                # Loop over the contours and find rectangular ones
+                for cnt in contours:
+                    # Approximate the contour to a polygon
+                    approx = cv2.approxPolyDP(cnt, 0.01 * cv2.arcLength(cnt, True), True)
 
-                # If the polygon has 4 vertices, it is likely a rectangle
-                if len(approx) == 4:
-                    # Calculate the area of the rectangle
-                    rect_area = cv2.contourArea(approx)
+                    # If the polygon has 4 vertices, it is likely a rectangle
+                    if len(approx) == 4:
+                        # Calculate the area of the rectangle
+                        rect_area = cv2.contourArea(approx)
 
-                    # If the area is larger than the previous largest, update the largest area and rectangle
-                    if rect_area > max_rect_area:
-                        max_rect_area = rect_area
-                        max_rect = approx
+                        # If the area is larger than the previous largest, update the largest area and rectangle
+                        if rect_area > max_rect_area:
+                            max_rect_area = rect_area
+                            max_rect = approx
 
-            # Draw the largest rectangle on the color image
-            if max_rect_area > 0:
-                cv2.drawContours(capture.color, [max_rect], 0, (0, 255, 0), 3)
-                print("Largest rectangle area:", max_rect_area)
-            else:
-                print("No rectangular object found.")
+                # Draw the largest rectangle on the color image
+                if max_rect_area > 0:
+                    cv2.drawContours(capture.color, [max_rect], 0, (0, 255, 0), 3)
+                    print("Largest rectangle area:", max_rect_area)
+                else:
+                    print("No rectangular object found.")
 
-            # Display the color image with the largest rectangle
-            cv2.imshow("k4a", capture.color)
+                # Display the color image with the largest rectangle
+                cv2.imshow("k4a", capture.color)
 
-            # Exit if any key is pressed
-            key = cv2.waitKey(10)
-            if key != -1:
-                cv2.destroyAllWindows()
-                break
+                # Exit if any key is pressed
+                key = cv2.waitKey(10)
+                if key != -1:
+                    cv2.destroyAllWindows()
+                    break
 
-    k4a.stop()
+        k4a.stop()
+
+        

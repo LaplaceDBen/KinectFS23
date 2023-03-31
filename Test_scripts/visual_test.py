@@ -8,12 +8,12 @@ def update_scene():
     #mesh.rotate_y(10,inplace=True)
     sphere.rotate_y(-10,inplace=True)
     #move mesh 10 cells in x axis
-    mesh1.translate([10,0,0],inplace=True)
+    mesh1.translate([10,0,0],inplace=False)
     #print position of mesh
-    print(mesh.center)
+    #print(mesh.center)
     #move mesh to position
 
-
+    
     mesh1.rotate_y(-10,inplace=False)
     
     
@@ -36,9 +36,9 @@ if __name__ == '__main__':
     p = BackgroundPlotter(window_size=(1280, 720), title='PyVistaQt Plotter', multi_samples=8, line_smoothing=True, point_smoothing=True, polygon_smoothing=True, auto_update=False)
     
     # We set the camera position to be in the xy plane 
-    p.camera_position = 'xy'
+    p.camera_position = [(0, 0, 100), (0, 0, 0), (0, 1, 0)]
     # We set the front and back clipping planes
-    p.camera.clipping_range = (0, 10)
+    p.camera.clipping_range = (0, 100)
 
     # We create the sphere which will orbit the angel statue and set its radius and center
     sphere = pv.Sphere(radius = 0.2, center=(0, 0, 100))
@@ -54,10 +54,19 @@ if __name__ == '__main__':
     p.add_mesh(sphere, pbr=True, metallic=0.7, roughness=0.2, diffuse=1)
     # We add the light to the plotter
     p.add_light(light)
+    p.add_axes()
+    p.add_bounding_box()
+    #m0ve mesh1 to diffrent side of bounding box
+    mesh1.translate([10,0,0],inplace=False)
 
-    # We create a callback for the plotter and we set the function that will be run in the update loop. We also set the interval of the update
-    # It is important to set the interval explicitly.
+    # We add the update_scene function as a callback to the plotter. The interval is in milliseconds.
     p.add_callback(update_scene, interval=100)
+    
+    p.add_toolbars()
+    p.add_slider_widget(update_scene, [0, 100], value=50, title='Slider', pointa=(0.8, 0.1), pointb=(0.9, 0.1))
+
+
+    #p.add_callback(update_scene, interval=100)
     print(mesh)
 
     # We show the plotter and call p.app.exec_(), so the plotter stays open. This is important when running the pyvistaqt plotter.
