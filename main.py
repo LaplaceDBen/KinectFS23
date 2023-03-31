@@ -2,7 +2,7 @@ from detection_func import *
 from visual_func import *
 
 
-MyK4AClass.get_device_id()
+Detection.get_device_id()
 '''
 df,image = detect_objects("images/rectangles.png", 0.7,0.95)
 print(df.head())

@@ -6,7 +6,7 @@ import pandas as pd
 import cv2
 
 
-class MyK4AClass:
+class Detection:
     def __init__(self):
         self.device_id = self.get_device_id()
 
