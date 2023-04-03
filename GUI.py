@@ -10,7 +10,10 @@ max_area = None  # Declare global variable
 
 def start():
     current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    log_window.append(f"{current_time} - start")
+    if max_area is None:
+        log_window.append(f"{current_time} - Could no start - Object Size is not calibrated")
+    else:
+        log_window.append(f"{current_time} - Programm is started - Object Size= {max_area}")
     
 
 def calibrate():

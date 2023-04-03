@@ -1,64 +1,55 @@
-import time
-import numba as nb
+import cv2
 
-@nb.jit(nopython=True, parallel=True)
-def find_largest_rectangle(contours):
-    max_rect_area = 0
-    max_rect = None
-    for cnt in contours:
-        approx = cv2.approxPolyDP(cnt, 0.01 * cv2.arcLength(cnt, True), True)
-        if len(approx) == 4:
-            rect_area = cv2.contourArea(approx)
-            if rect_area > max_rect_area:
-                max_rect_area = rect_area
-                max_rect = approx
-    return max_rect, max_rect_area
 
-def main():
-    k4a = PyK4A(
-        Config(
-            color_resolution=pyk4a.ColorResolution.RES_720P,
-            depth_mode=pyk4a.DepthMode.NFOV_UNBINNED,
-            synchronized_images_only=True,
-        )
-    )
-    k4a.start()
+def detect_area():
+    # Open the default camera
+    cap = cv2.VideoCapture(0)
 
-    # getters and setters directly get and set on device
-    k4a.whitebalance = 4500
-    assert k4a.whitebalance == 4500
-    k4a.whitebalance = 4510
-    assert k4a.whitebalance == 4510
+    # Capture a frame from the camera
+    ret, frame = cap.read()
 
-    while True:
-        capture = k4a.get_capture()
-        if np.any(capture.color):
-            gray = cv2.cvtColor(capture.color, cv2.COLOR_BGR2GRAY)
-            edges = cv2.Canny(gray, 100, 200)
-            contours, hierarchy = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    # Let the user select an ROI
+    cv2.namedWindow("Select Object to Detect")
+    cv2.resizeWindow("Select Object to Detect", 640, 480)
+    roi = cv2.selectROI("Select Object to Detect", frame)
 
-            max_rect, max_rect_area = find_largest_rectangle(contours)
+    # Crop the image to the selected ROI
+    img_roi = frame[int(roi[1]):int(roi[1]+roi[3]), int(roi[0]):int(roi[0]+roi[2])]
 
-            if max_rect is not None:
-                timestamp = time.time()
-                center_x = (max_rect[0][0][0] + max_rect[2][0][0]) / 2
-                center_y = (max_rect[0][0][1] + max_rect[2][0][1]) / 2
+    # Convert the cropped image to grayscale
+    gray = cv2.cvtColor(img_roi, cv2.COLOR_BGR2GRAY)
 
-                print("Timestamp:", timestamp)
-                print("Area:", max_rect_area)
-                print("Center point: ({}, {})".format(center_x, center_y))
-                print("Corner coordinates:")
-                for corner in max_rect:
-                    print("({},{})".format(corner[0][0], corner[0][1]))
-                print("\n")
-            else:
-                print("No rectangular object found.")
+    # Apply a threshold to the image
+    ret, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)
 
-            cv2.imshow("k4a", capture.color)
+    edges = cv2.Canny(gray, 100, 200)
 
-            key = cv2.waitKey(10)
-            if key != -1:
-                cv2.destroyAllWindows()
-                break
+    # Find contours in the image
+    contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-    k4a.stop()
+    # Find the contour with the largest area, which should be a rectangle
+    max_area = 0
+    max_contour = None
+    for contour in contours:
+        # Fit a straight bounding rectangle to the contour
+        x,y,w,h = cv2.boundingRect(contour)
+        # Check if the contour is a rectangle by comparing its aspect ratio
+        aspect_ratio = float(w)/h
+        if aspect_ratio > 0.5 and aspect_ratio < 1.5:
+            area = w*h
+            if area > max_area:
+                max_area = area
+                max_contour = contour
+
+    # Draw the contour with the largest area on the original image
+    cv2.drawContours(img_roi, [max_contour], -1, (0, 255, 0), 2)
+
+    # Show the original image with the selected ROI and the contour with the largest area
+    cv2.imshow("Select Model", img_roi)
+    cv2.waitKey(0)
+
+    # Release the camera and close all windows
+    cap.release()
+    cv2.destroyAllWindows()
+
+    return max_area
