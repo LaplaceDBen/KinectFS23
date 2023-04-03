@@ -1,6 +1,7 @@
 import sys
 import datetime
 from calibrate import detect_area
+from PySide6.QtCore import QFile
 from PySide6.QtGui import QIcon, QFont
 from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QTextEdit, QPushButton, QScrollArea
 from PySide6.QtQuickControls2 import QQuickStyle
@@ -42,6 +43,14 @@ class GUI_Azure_Kinect(QWidget):
         self.layout.addWidget(self.calibrate_button)
         self.layout.addWidget(self.stop_button)
         self.layout.addWidget(self.log_window)
+
+                # set stylesheet
+
+        stylesheet = QFile('style.css')
+        if stylesheet.open(QFile.ReadOnly | QFile.Text):
+    # Set the stylesheet for the application
+            self.setStyleSheet(stylesheet.readAll().data().decode('utf-8'))
+        
 
     def start(self):
         current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
