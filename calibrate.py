@@ -3,6 +3,7 @@ import numpy as np
 from pyk4a import Config, PyK4A
 import pyk4a
 
+#help by chatgpt
 def detect_area():
     # Initialize K4A camera
     k4a = PyK4A(

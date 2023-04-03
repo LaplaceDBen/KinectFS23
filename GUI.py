@@ -5,70 +5,71 @@ from PySide6.QtGui import QIcon, QFont
 from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QTextEdit, QPushButton, QScrollArea
 from PySide6.QtQuickControls2 import QQuickStyle
 
+#help by chatgpt
+class GUI_Azure_Kinect(QWidget):
 
-max_area = None  # Declare global variable
+    def __init__(self):
+        super().__init__()
 
-def start():
-    current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    if max_area is None:
-        log_window.append(f"{current_time} - Could no start - Object Size is not calibrated")
-    else:
-        log_window.append(f"{current_time} - Programm is started - Object Size= {max_area}")
-    
+        self.max_area = None
 
-def calibrate():
-    #change global value
-    global max_area
-    current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    max_area = detect_area()
-    if max_area is not None:
-        log_window.append(f"{current_time} - calibrated - Object Size= {max_area}")
-    else:
-        log_window.append(f"{current_time} - calibration failed")
-    return max_area
+        self.setWindowTitle('GUI_Azure_Kinect')
+        self.setWindowIcon(QIcon('images\FHGR.jpg'))
+        self.resize(800, 600)
 
-def stop():
-    current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    log_window.append(f"{current_time} - Programm is stopped")
-    global max_area
-    max_area = None
-    log_window.append(f"{current_time} - Calibration is reset")
+        self.layout = QVBoxLayout(self)
 
-app = QApplication(sys.argv)
-QQuickStyle.setStyle('Material')
+        self.start_button = QPushButton('Start')
+        self.start_button.clicked.connect(self.start)
 
-window = QWidget()
-window.setWindowTitle('GUI_Azure_Kinect')
-window.setWindowIcon(QIcon('images\FHGR.jpg'))
-window.resize(800, 600)
+        self.calibrate_button = QPushButton('Calibrate')
+        self.calibrate_button.clicked.connect(self.calibrate)
 
-layout = QVBoxLayout(window)
+        self.stop_button = QPushButton('Stop')
+        self.stop_button.clicked.connect(self.stop)
 
-start_button = QPushButton('Start')
-start_button.clicked.connect(start)
+        self.log_window = QTextEdit()
+        self.log_window.setPlaceholderText('Log')
+        self.log_window.setFontWeight(QFont.Bold)
+        self.log_window.setFontPointSize(12)
+        self.log_window.setFontFamily('Courier')
+        self.log_window.setReadOnly(True)
 
-calibrate_button = QPushButton('Calibrate')
-calibrate_button.clicked.connect(calibrate)
+        self.scroll_area = QScrollArea()
+        self.scroll_area.setWidget(self.log_window)
 
-stop_button = QPushButton('Stop')
-stop_button.clicked.connect(stop)
+        self.layout.addWidget(self.start_button)
+        self.layout.addWidget(self.calibrate_button)
+        self.layout.addWidget(self.stop_button)
+        self.layout.addWidget(self.log_window)
 
-log_window = QTextEdit()
-log_window.setPlaceholderText('Log')
-log_window.setFontWeight(QFont.Bold)
-log_window.setFontPointSize(12)
-log_window.setFontFamily('Courier')
+    def start(self):
+        current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        if self.max_area is None:
+            self.log_window.append(f"{current_time} - Could no start - Object Size is not calibrated")
+        else:
+            self.log_window.append(f"{current_time} - Programm is started - Object Size= {self.max_area}")
+
+    def calibrate(self):
+        current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.max_area = detect_area()
+        if self.max_area is not None:
+            self.log_window.append(f"{current_time} - calibrated - Object Size= {self.max_area}")
+        else:
+            self.log_window.append(f"{current_time} - calibration failed")
+
+    def stop(self):
+        current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.log_window.append(f"{current_time} - Programm is stopped")
+        self.max_area = None
+        self.log_window.append(f"{current_time} - Calibration is reset")
 
 
-log_window.setReadOnly(True)
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    QQuickStyle.setStyle('Material')
 
-scroll_area = QScrollArea()
-scroll_area.setWidget(log_window)
+    gui = GUI_Azure_Kinect()
+    gui.show()
 
-layout.addWidget(start_button)
-layout.addWidget(calibrate_button)
-layout.addWidget(stop_button)
-layout.addWidget(log_window)
-
-window.show()
-sys.exit(app.exec())
+    sys.exit(app.exec())
