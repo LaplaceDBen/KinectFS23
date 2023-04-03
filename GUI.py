@@ -53,24 +53,28 @@ class GUI_Azure_Kinect(QWidget):
         
 
     def start(self):
-        current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
         if self.max_area is None:
             self.log_window.append(f"{current_time} - Could no start - Object Size is not calibrated")
         else:
             self.log_window.append(f"{current_time} - Programm is started - Object Size= {self.max_area}")
 
     def calibrate(self):
-        current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.max_area = detect_area()
-        if self.max_area is not None:
-            self.log_window.append(f"{current_time} - calibrated - Object Size= {self.max_area}")
-        else:
-            self.log_window.append(f"{current_time} - calibration failed")
+        try:
+            current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+            self.max_area = detect_area()
+            if self.max_area is not None:
+                self.log_window.append(f"{current_time} - calibrated - Object Size= {self.max_area}")
+            else:
+                self.log_window.append(f"{current_time} - calibration failed")
+        except:
+            self.log_window.append(f"{current_time} - calibration failed - camera not connected")
 
     def stop(self):
-        current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
         self.log_window.append(f"{current_time} - Programm is stopped")
         self.max_area = None
+        current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
         self.log_window.append(f"{current_time} - Calibration is reset")
 
 

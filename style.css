@@ -10,13 +10,13 @@ QPushButton {
     font-weight: bold;
 }
 QPushButton:hover {
-    background-color: #e0e0e0;
+    background-color: #ffffff;
 }
 QTextEdit {
     background-color: #ffffff;
     border: 1px solid #333333;
     border-radius: 4px;
-    font-size: 12px;
+    font-size: 10px;
     font-family: Courier;
     padding: 4px;
 }
