@@ -1,12 +1,12 @@
 import cv2
 
-
 def detect_area():
     # Open the default camera
     cap = cv2.VideoCapture(0)
 
     # Capture a frame from the camera
     ret, frame = cap.read()
+
     # Let the user select an ROI
     cv2.namedWindow("Select Object to Detect")
     cv2.resizeWindow("Select Object to Detect", 640, 480)
@@ -22,18 +22,23 @@ def detect_area():
     ret, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)
 
     edges = cv2.Canny(gray, 100, 200)
-    # Find contours in the image
-    #edge detection with canny to esure that the contour is sharp
-    contours, hierarchy = cv2.findContours(edges,thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
-    # Find the contour with the largest area
+    # Find contours in the image
+    contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    # Find the contour with the largest area, which should be a rectangle
     max_area = 0
     max_contour = None
     for contour in contours:
-        area = cv2.contourArea(contour)
-        if area > max_area:
-            max_area = area
-            max_contour = contour
+        # Fit a straight bounding rectangle to the contour
+        x,y,w,h = cv2.boundingRect(contour)
+        # Check if the contour is a rectangle by comparing its aspect ratio
+        aspect_ratio = float(w)/h
+        if aspect_ratio > 0.5 and aspect_ratio < 1.5:
+            area = w*h
+            if area > max_area:
+                max_area = area
+                max_contour = contour
 
     # Draw the contour with the largest area on the original image
     cv2.drawContours(img_roi, [max_contour], -1, (0, 255, 0), 2)
