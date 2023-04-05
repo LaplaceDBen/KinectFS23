@@ -8,7 +8,7 @@ def detect_area():
     # Initialize K4A camera
     k4a = PyK4A(
         Config(
-            color_resolution=pyk4a.ColorResolution.RES_720P,
+            color_resolution=pyk4a.ColorResolution.RES_1080P,
             depth_mode=pyk4a.DepthMode.NFOV_UNBINNED,
             synchronized_images_only=True,
         )
@@ -22,7 +22,7 @@ def detect_area():
     
     # Let the user select an ROI
     cv2.namedWindow("Select Object to Detect")
-    cv2.resizeWindow("Select Object to Detect", 640, 480)
+    #cv2.resizeWindow("Select Object to Detect", 640, 480)
     roi = cv2.selectROI("Select Object to Detect", frame)
 
     # Crop the image to the selected ROI

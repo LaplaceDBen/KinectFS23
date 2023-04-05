@@ -11,6 +11,6 @@ cv2.imshow("Objects", image)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
 '''
-#Detection.live_depth()
+Detection.live_depth()
 #Detection.largest_rectangle()
 
