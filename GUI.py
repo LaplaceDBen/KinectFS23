@@ -1,6 +1,7 @@
 import sys
 import datetime
 from calibrate import detect_area
+from detection_func import test_match
 from PySide6.QtCore import QFile
 from PySide6.QtGui import QIcon, QFont
 from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QTextEdit, QPushButton, QScrollArea
@@ -13,6 +14,7 @@ class GUI_Azure_Kinect(QWidget):
         super().__init__()
 
         self.max_area = None
+        self.max_contour = None
 
         self.setWindowTitle('GUI_Azure_Kinect')
         self.setWindowIcon(QIcon('images\FHGR.jpg'))
@@ -58,11 +60,14 @@ class GUI_Azure_Kinect(QWidget):
             self.log_window.append(f"{current_time} - Could no start - Object Size is not calibrated")
         else:
             self.log_window.append(f"{current_time} - Programm is started - Object Size= {self.max_area}")
+            test_match(self.max_area, self.max_contour)
+
 
     def calibrate(self):
         try:
             current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
-            self.max_area = detect_area()
+            self.max_area, self.max_contour = detect_area()
+            print(self.max_contour)
             if self.max_area is not None:
                 self.log_window.append(f"{current_time} - calibrated - Object Size= {self.max_area}")
             else:

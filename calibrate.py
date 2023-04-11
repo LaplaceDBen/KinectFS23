@@ -3,7 +3,11 @@ import numpy as np
 from pyk4a import Config, PyK4A
 import pyk4a
 
-#help by chatgpt
+import cv2
+import numpy as np
+from pyk4a import Config, PyK4A
+import pyk4a
+
 def detect_area():
     # Initialize K4A camera
     k4a = PyK4A(
@@ -65,4 +69,4 @@ def detect_area():
     k4a.stop()
     cv2.destroyAllWindows()
 
-    return max_area
+    return max_area, max_contour
