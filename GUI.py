@@ -1,7 +1,8 @@
 import sys
 import datetime
 from calibrate import detect_area
-from detection_func import test_match, get_top_similar_contours
+#get testmacth from Detewction klass
+from detection_func import Detection
 from PySide6.QtCore import QFile
 from PySide6.QtGui import QIcon, QFont
 from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QTextEdit, QPushButton, QScrollArea
@@ -60,7 +61,7 @@ class GUI_Azure_Kinect(QWidget):
             self.log_window.append(f"{current_time} - Could no start - Object Size is not calibrated")
         else:
             self.log_window.append(f"{current_time} - Programm is started - Object Size= {self.max_area}")
-            test_match(self.max_area, self.max_contour)
+            Detection.test_match(self.max_area, self.max_contour)
 
 
     def calibrate(self):

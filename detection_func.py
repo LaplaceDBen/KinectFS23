@@ -4,6 +4,7 @@ from pyk4a import Config, PyK4A, connected_device_count
 import numpy as np
 import pandas as pd
 import cv2
+import time
 
 
 class Detection:
@@ -155,62 +156,66 @@ class Detection:
 
         k4a.stop()
 
-        
-def test_match(max_area, max_contour):
-    # Initialize K4A camera
-    k4a = PyK4A(
-        Config(
-            color_resolution=pyk4a.ColorResolution.RES_1080P,
-            depth_mode=pyk4a.DepthMode.NFOV_UNBINNED,
-            synchronized_images_only=True,
+    @staticmethod   
+    def test_match(max_area, max_contour):
+        # Initialize K4A camera
+        k4a = PyK4A(
+            Config(
+                color_resolution=pyk4a.ColorResolution.RES_1080P,
+                depth_mode=pyk4a.DepthMode.NFOV_UNBINNED,
+                synchronized_images_only=True,
+            )
         )
-    )
-    k4a.start()
+        k4a.start()
 
-    while True:
-        # Get a capture from the camera
-        capture = k4a.get_capture()
-        frame = capture.color[:, :, :3]
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
+        while True:
+            # Get a capture from the camera
+            capture = k4a.get_capture()
+            frame = capture.color[:, :, :3]
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
 
-        # Convert the input image to 8-bit single channel image
-        img_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        img_gray = cv2.GaussianBlur(img_gray, (5, 5), 0)
+            # Convert the input image to 8-bit single channel image
+            img_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            img_gray = cv2.GaussianBlur(img_gray, (5, 5), 0)
 
-        # Apply a threshold to the image
-        ret, thresh = cv2.threshold(img_gray, 0, 255, cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)
+            # Apply a threshold to the image
+            ret, thresh = cv2.threshold(img_gray, 0, 255, cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)
 
-        # Find contours in the image
-        contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            # Find contours in the image
+            contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-        # Iterate over the top 4 contours with highest similarity to the max_contour
-        for contour in get_top_similar_contours(contours, max_contour, 4):
-            # Compute the similarity between the current contour and the max_contour
+            # Iterate over the top 4 contours with highest similarity to the max_contour
+            for contour in Detection.similarity(contours, max_contour, 4):
+                # Compute the similarity between the current contour and the max_contour
+                similarity = cv2.matchShapes(max_contour, contour, cv2.CONTOURS_MATCH_I3, 0)
+                # Draw the contour on the image
+                cv2.drawContours(frame, [contour], -1, (0, 0, 255), 2)
+                # Print the similarity value
+                print(f"Similarity: {similarity:.2f}")
+                #wait for 100 milioseconds
+                time.sleep(0.1)
+
+                # Compute the center and angle of the ellipse fitted to the contour
+                if len(contour) >= 5:
+                    (x,y), (MA,ma), angle = cv2.fitEllipse(contour)
+                    print(f"Center coordinates: ({x:.1f}, {y:.1f}), Orientation angle: {angle:.1f}")
+
+            # Show the image with all the detected contours
+            cv2.imshow("Contour detection", frame)
+
+            # Exit the loop if the user presses the 'q' key
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+
+        # Release the camera and close all windows
+        k4a.stop()
+        cv2.destroyAllWindows()
+    @staticmethod
+    def similarity(contours, max_contour, k):
+        similarities = []
+        for contour in contours:
             similarity = cv2.matchShapes(max_contour, contour, cv2.CONTOURS_MATCH_I3, 0)
-            # Draw the contour on the image
-            cv2.drawContours(frame, [contour], -1, (0, 0, 255), 2)
-
-            # Compute the center and angle of the ellipse fitted to the contour
-            if len(contour) >= 5:
-                (x,y), (MA,ma), angle = cv2.fitEllipse(contour)
-                print(f"Center coordinates: ({x:.1f}, {y:.1f}), Orientation angle: {angle:.1f}")
-
-        # Show the image with all the detected contours
-        cv2.imshow("Contour detection", frame)
-
-        # Exit the loop if the user presses the 'q' key
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-
-    # Release the camera and close all windows
-    k4a.stop()
-    cv2.destroyAllWindows()
-
-def get_top_similar_contours(contours, max_contour, k):
-    similarities = []
-    for contour in contours:
-        similarity = cv2.matchShapes(max_contour, contour, cv2.CONTOURS_MATCH_I3, 0)
-        similarities.append((contour, similarity))
-    similarities.sort(key=lambda x: x[1])
-    similarities = similarities[:k]
-    return [s[0] for s in similarities]
+            similarities.append((contour, similarity))
+        similarities.sort(key=lambda x: x[1])
+        similarities = similarities[:k]
+        return [s[0] for s in similarities]
