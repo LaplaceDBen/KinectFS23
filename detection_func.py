@@ -90,60 +90,6 @@ class Detection:
         
         return df, image
 
-    @staticmethod
-    def live_depth():
-
-        #Modifikation of viewer depth
-        k4a = PyK4A(
-            Config(
-                color_resolution=pyk4a.ColorResolution.OFF,
-                depth_mode=pyk4a.DepthMode.NFOV_UNBINNED,
-                synchronized_images_only=False,
-            )
-        )
-        k4a.start()
-
-        # getters and setters directly get and set on device
-        k4a.whitebalance = 4500
-        assert k4a.whitebalance == 4500
-        k4a.whitebalance = 4510
-        assert k4a.whitebalance == 4510
-
-        while True:
-            capture = k4a.get_capture()
-            if np.any(capture.depth):
-                # Convert depth image to a normalized 8-bit image
-                depth_norm = cv2.normalize(capture.depth, None, 0, 255, cv2.NORM_MINMAX, cv2.CV_8UC1)
-
-                # Apply a threshold to create a binary image
-                _, threshold = cv2.threshold(depth_norm, 100, 255, cv2.THRESH_BINARY)
-
-                # Find contours in the binary image
-                contours, _ = cv2.findContours(threshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-                closest_depth = float('inf')
-
-                # Loop through each contour
-                for contour in contours:
-                    # Calculate the depth of the object by finding the mean depth value within the contour
-                    mask = np.zeros_like(capture.depth)
-                    cv2.drawContours(mask, [contour], 0, 255, -1)
-                    depth_values = capture.depth[np.where(mask > 0)]
-                    depth = np.mean(depth_values)
-
-                    if depth < closest_depth:
-                        closest_depth = depth
-
-                # Write the closest depth in black
-                cv2.putText(depth_norm, f"Depth: {closest_depth:.2f} mm", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
-
-                cv2.imshow("k4a", colorize(depth_norm, (None, 5000), cv2.COLORMAP_HSV))
-                key = cv2.waitKey(10)
-                if key != -1:
-                    cv2.destroyAllWindows()
-                    break
-
-        k4a.stop()
 
     @staticmethod
     def largest_rectangle():
@@ -210,7 +156,6 @@ class Detection:
         k4a.stop()
 
         
-
 def test_match(max_area, max_contour):
     # Initialize K4A camera
     k4a = PyK4A(
@@ -238,13 +183,17 @@ def test_match(max_area, max_contour):
         # Find contours in the image
         contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-        # Iterate over all contours and compute their similarity to the max_contour
-        for contour in contours:
+        # Iterate over the top 4 contours with highest similarity to the max_contour
+        for contour in get_top_similar_contours(contours, max_contour, 4):
             # Compute the similarity between the current contour and the max_contour
             similarity = cv2.matchShapes(max_contour, contour, cv2.CONTOURS_MATCH_I3, 0)
-            # Print the similarity score and draw the contour on the image
-            print(f"Contour similarity: {similarity}")
+            # Draw the contour on the image
             cv2.drawContours(frame, [contour], -1, (0, 0, 255), 2)
+
+            # Compute the center and angle of the ellipse fitted to the contour
+            if len(contour) >= 5:
+                (x,y), (MA,ma), angle = cv2.fitEllipse(contour)
+                print(f"Center coordinates: ({x:.1f}, {y:.1f}), Orientation angle: {angle:.1f}")
 
         # Show the image with all the detected contours
         cv2.imshow("Contour detection", frame)
@@ -256,3 +205,12 @@ def test_match(max_area, max_contour):
     # Release the camera and close all windows
     k4a.stop()
     cv2.destroyAllWindows()
+
+def get_top_similar_contours(contours, max_contour, k):
+    similarities = []
+    for contour in contours:
+        similarity = cv2.matchShapes(max_contour, contour, cv2.CONTOURS_MATCH_I3, 0)
+        similarities.append((contour, similarity))
+    similarities.sort(key=lambda x: x[1])
+    similarities = similarities[:k]
+    return [s[0] for s in similarities]

@@ -47,15 +47,10 @@ def detect_area():
     max_area = 0
     max_contour = None
     for contour in contours:
-        #fit a bounding box to the contour
-        x,y,w,h = cv2.boundingRect(contour)
-        area = w*h
-
-        # Check if the contour is a rectangle by comparing its aspect ratio
+        area = cv2.contourArea(contour)
         if area > max_area:
             max_area = area
             max_contour = contour
-
     # Draw the contour with the largest area on the original image
     contour_offset_x = int(roi[0])
     contour_offset_y = int(roi[1])
