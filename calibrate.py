@@ -2,66 +2,82 @@ import cv2
 import numpy as np
 from pyk4a import Config, PyK4A
 import pyk4a
+from pyzbar.pyzbar import decode
+from PySide6.QtWidgets import QApplication, QLabel, QLineEdit, QPushButton, QVBoxLayout, QWidget, QMessageBox
 
-import cv2
-import numpy as np
-from pyk4a import Config, PyK4A
-import pyk4a
+def detect_objects():
+    # Create application and main window
+    app = QApplication([])
+    window = QWidget()
+    layout = QVBoxLayout()
+    window.setLayout(layout)
 
-def detect_area():
-    # Initialize K4A camera
-    k4a = PyK4A(
-        Config(
-            color_resolution=pyk4a.ColorResolution.RES_1080P,
-            depth_mode=pyk4a.DepthMode.NFOV_UNBINNED,
-            synchronized_images_only=True,
+    # Create input field and button
+    input_label = QLabel("Enter the number of objects:")
+    input_field = QLineEdit()
+    button = QPushButton("Detect Objects")
+
+    # Add input field and button to layout
+    layout.addWidget(input_label)
+    layout.addWidget(input_field)
+    layout.addWidget(button)
+
+    # Show window
+    window.show()
+
+    # Wait for button to be clicked
+    def on_button_clicked():
+        # Get the number of objects from the input field
+        num_objects = int(input_field.text())
+
+        # Initialize K4A camera
+        k4a = PyK4A(
+            Config(
+                color_resolution=pyk4a.ColorResolution.RES_1080P,
+                depth_mode=pyk4a.DepthMode.NFOV_UNBINNED,
+                synchronized_images_only=True,
+            )
         )
-    )
-    k4a.start()
+        k4a.start()
 
-    # Get a capture from the camera
-    capture = k4a.get_capture()
-    frame = capture.color[:, :, :3]
-    frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
-    
-    # Let the user select an ROI
-    cv2.namedWindow("Select Object to Detect")
-    #cv2.resizeWindow("Select Object to Detect", 640, 480)
-    roi = cv2.selectROI("Select Object to Detect", frame)
+        # Detect QR codes
+        qr_codes = []
+        while len(qr_codes) < num_objects:
+            # Get synchronized capture from camera
+            capture = k4a.get_capture()
 
-    # Crop the image to the selected ROI
-    img_roi = frame[int(roi[1]):int(roi[1]+roi[3]), int(roi[0]):int(roi[0]+roi[2])]
-    # Convert the input image to 8-bit single channel image
-    img_roi_gray = cv2.cvtColor(img_roi, cv2.COLOR_BGR2GRAY)
-    img_roi_gray = cv2.GaussianBlur(img_roi_gray, (5, 5), 0)
+            # Extract color image from capture
+            color_image = capture.color
 
-    # Apply a threshold to the image
-    ret, thresh = cv2.threshold(img_roi_gray, 0, 255, cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)
+            # Decode QR codes from color image
+            qr_codes = decode(cv2.cvtColor(color_image, cv2.COLOR_BGR2GRAY))
 
-    edges = cv2.Canny(img_roi_gray, 100, 200)
+            # Show error message if more QR codes found
+            if len(qr_codes) > num_objects:
+                QMessageBox.warning(
+                    window,
+                    "Error",
+                    "More QR codes found than expected. Please recalibrate.",
+                )
 
-    # Find contours in the image
-    contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        # Stop the camera
+        k4a.stop()
 
-    # Find the contour with the largest area, which should be a rectangle
-    max_area = 0
-    max_contour = None
-    for contour in contours:
-        area = cv2.contourArea(contour)
-        if area > max_area:
-            max_area = area
-            max_contour = contour
-    # Draw the contour with the largest area on the original image
-    contour_offset_x = int(roi[0])
-    contour_offset_y = int(roi[1])
-    cv2.drawContours(frame, [max_contour + (contour_offset_x, contour_offset_y)], -1, (0, 255, 0), 2)
+        # Show error message if fewer QR codes found
+        if len(qr_codes) < num_objects:
+            QMessageBox.warning(
+                window,
+                "Error",
+                "Could not find all objects. Please try again.",
+            )
 
-    # Show the original image with the selected ROI and the contour with the largest area
-    cv2.imshow("Select Model", frame)
-    cv2.waitKey(0)
+        # Return the number of objects found
+        return len(qr_codes)
 
-    # Release the camera and close all windows
-    k4a.stop()
-    cv2.destroyAllWindows()
+    button.clicked.connect(on_button_clicked)
 
-    return max_area, max_contour
+    # Start event loop
+    app.exec_()
+
+
+detect_objects()
