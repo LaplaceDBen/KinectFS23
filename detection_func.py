@@ -4,6 +4,7 @@ from pyzbar.pyzbar import decode
 import pyk4a
 from pyk4a import Config, PyK4A
 import time
+from datetime import datetime
 from config import camera_config
 
 class QRCodeDetector:
@@ -20,7 +21,7 @@ class QRCodeDetector:
         font_scale = 1
 
         # Open log file and write initial timestamp
-        log_file = open('qr_code_log.txt', 'w')
+        log_file = open('logfile.log', 'w')
         log_file.write(f"QR Code Detection Log ({time.strftime('%Y-%m-%d %H:%M:%S')})\n\n")
 
         while True:
@@ -67,15 +68,19 @@ class QRCodeDetector:
                         rect = cv2.minAreaRect(np.array(obj.polygon, np.int32))
                         angle = rect[2]
                         angles.append(angle)
-                        print(f"{qr_codes[i]} Angle: {angle} ({coords[i][0]}, {coords[i][1]})")
+                        #print angle rounded with coordinates
 
-                    # Write terminal output to log file
-                    log_file.write("QR Codes Found: ")
-                    for i in range(num_obj):
-                        log_file.write(f"{qr_codes[i]} ({coords[i][0]}, {coords[i][1]}) Angle: {angles[i]} ")
-                    log_file.write(f"({time.strftime('%Y-%m-%d %H:%M:%S')})\n")
+                        print(f"{qr_codes[i]} Angle: {round(angle, 2)} ({coords[i][0]}, {coords[i][1]})")
 
-                    print("\nNext Search: ", time.strftime("%Y-%m-%d %H:%M:%S"))
+                        # Write terminal output to log file
+                        log_file.write(f"{qr_codes[i]} ({coords[i][0]}, {coords[i][1]}) Angle: {round(angles[i], 2)} ")
+
+                    
+                    # Write timestamp to log file
+                log_file.write(f"({datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]})\n")
+                log_file.flush()
+
+                print("\nNext Search: ", datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3])
 
                 cv2.imshow("QR Codes", color_image)
                 cv2.resizeWindow("QR Codes", (color_image.shape[1], color_image.shape[0]))
@@ -85,7 +90,9 @@ class QRCodeDetector:
                 break
 
         k4a.stop()
-        cv2.destroyAllWindows()
+        log_file.close()
+       
+
 
 
 

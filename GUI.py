@@ -1,7 +1,5 @@
 import sys
 import datetime
-#from calibrate import detect_area
-#get testmacth from Detewction klass
 from detection_func import QRCodeDetector
 from PySide6.QtCore import QFile
 from PySide6.QtGui import QIcon, QFont
@@ -53,15 +51,19 @@ class GUI_Azure_Kinect(QWidget):
         if stylesheet.open(QFile.ReadOnly | QFile.Text):
     # Set the stylesheet for the application
             self.setStyleSheet(stylesheet.readAll().data().decode('utf-8'))
-        
+    def log(self, message):
+        self.log_window.append(message) 
 
     def start(self):
         current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
-        if self.max_area is None:
-            self.log_window.append(f"{current_time} - Could no start - Object Size is not calibrated")
+        if self.num_obj is None:
+            self.log_window.append(f"{current_time} - Could no start - number off objects is not calibrated")
         else:
-            self.log_window.append(f"{current_time} - Programm is started - Object Size= {self.max_area}")
-            QRCodeDetector.detect_qr_codes( num_obj=5)
+            self.log_window.append(f"{current_time} - Programm is started - Number of objects: {self.num_obj}")
+            QRCodeDetector.detect_qr_codes(self.num_obj)
+            
+        
+        
 
 
     def calibrate(self):
@@ -84,7 +86,6 @@ class GUI_Azure_Kinect(QWidget):
     def stop(self):
         current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
         self.log_window.append(f"{current_time} - Programm is stopped")
-        self.max_area = None
         current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
         self.log_window.append(f"{current_time} - Calibration is reset")
 
