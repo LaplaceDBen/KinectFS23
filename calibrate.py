@@ -3,81 +3,60 @@ import numpy as np
 from pyk4a import Config, PyK4A
 import pyk4a
 from pyzbar.pyzbar import decode
-from PySide6.QtWidgets import QApplication, QLabel, QLineEdit, QPushButton, QVBoxLayout, QWidget, QMessageBox
+import progressbar
 
-def detect_objects():
-    # Create application and main window
-    app = QApplication([])
-    window = QWidget()
-    layout = QVBoxLayout()
-    window.setLayout(layout)
-
-    # Create input field and button
-    input_label = QLabel("Enter the number of objects:")
-    input_field = QLineEdit()
-    button = QPushButton("Detect Objects")
-
-    # Add input field and button to layout
-    layout.addWidget(input_label)
-    layout.addWidget(input_field)
-    layout.addWidget(button)
-
-    # Show window
-    window.show()
-
-    # Wait for button to be clicked
-    def on_button_clicked():
-        # Get the number of objects from the input field
-        num_objects = int(input_field.text())
-
-        # Initialize K4A camera
-        k4a = PyK4A(
-            Config(
-                color_resolution=pyk4a.ColorResolution.RES_1080P,
-                depth_mode=pyk4a.DepthMode.NFOV_UNBINNED,
-                synchronized_images_only=True,
-            )
+def detect_qr_codes():
+    # Initialize K4A camera
+    k4a = PyK4A(
+        Config(
+            color_resolution=pyk4a.ColorResolution.RES_1080P,
+            depth_mode=pyk4a.DepthMode.NFOV_UNBINNED,
+            synchronized_images_only=True,
         )
-        k4a.start()
+    )
+    k4a.start()
 
-        # Detect QR codes
-        qr_codes = []
-        while len(qr_codes) < num_objects:
-            # Get synchronized capture from camera
-            capture = k4a.get_capture()
+    # Initialize progress bar
+    bar = progressbar.ProgressBar(widgets=[
+        progressbar.AnimatedMarker(),
+        ' ',
+        progressbar.Bar(),
+        ' ',
+        progressbar.Timer(),
+    ])
 
-            # Extract color image from capture
-            color_image = capture.color
+    # Initialize list of found QR codes
+    qr_codes = []
 
-            # Decode QR codes from color image
-            qr_codes = decode(cv2.cvtColor(color_image, cv2.COLOR_BGR2GRAY))
+    # Search for QR codes for 3 seconds
+    for i in range(30):
+        # Get color image from K4A camera
+        frame = k4a.get_frames(timeout=1000)
+        color_image = frame.color
 
-            # Show error message if more QR codes found
-            if len(qr_codes) > num_objects:
-                QMessageBox.warning(
-                    window,
-                    "Error",
-                    "More QR codes found than expected. Please recalibrate.",
-                )
+        # Decode QR codes in color image
+        decoded_objects = decode(color_image)
 
-        # Stop the camera
-        k4a.stop()
+        # Draw bounding boxes around QR codes and add them to list
+        for obj in decoded_objects:
+            qr_codes.append(obj)
+            cv2.rectangle(color_image, obj.rect.left_top, obj.rect.right_bottom, (0, 255, 0), 2)
 
-        # Show error message if fewer QR codes found
-        if len(qr_codes) < num_objects:
-            QMessageBox.warning(
-                window,
-                "Error",
-                "Could not find all objects. Please try again.",
-            )
+        # Update progress bar
+        bar.update(i/29)
 
-        # Return the number of objects found
-        return len(qr_codes)
+    # Close K4A camera
+    k4a.stop()
 
-    button.clicked.connect(on_button_clicked)
+    # Draw progress bar to 100%
+    bar.finish()
 
-    # Start event loop
-    app.exec_()
+    # Return number of found QR codes
+    return len(qr_codes)
 
+if __name__ == "__main__":
+    # Get number of found QR codes
+    num_qr_codes = detect_qr_codes()
 
-detect_objects()
+    # Print number of found QR codes
+    print(f"Found {num_qr_codes} QR codes.")

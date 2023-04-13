@@ -1,12 +1,13 @@
 import sys
 import datetime
-from calibrate import detect_area
+#from calibrate import detect_area
 #get testmacth from Detewction klass
 from detection_func import QRCodeDetector
 from PySide6.QtCore import QFile
 from PySide6.QtGui import QIcon, QFont
-from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QTextEdit, QPushButton, QScrollArea
+from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QTextEdit, QPushButton, QScrollArea, QInputDialog,QMessageBox
 from PySide6.QtQuickControls2 import QQuickStyle
+
 
 #help by chatgpt
 class GUI_Azure_Kinect(QWidget):
@@ -14,8 +15,7 @@ class GUI_Azure_Kinect(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.max_area = None
-        self.max_contour = None
+        self.num_obj = None
 
         self.setWindowTitle('GUI_Azure_Kinect')
         self.setWindowIcon(QIcon('images\FHGR.jpg'))
@@ -65,15 +65,21 @@ class GUI_Azure_Kinect(QWidget):
 
 
     def calibrate(self):
+        current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
         try:
-            current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
-            self.max_area, self.max_contour = detect_area()
-            if self.max_area is not None:
-                self.log_window.append(f"{current_time} - calibrated - Object Size= {self.max_area}")
+            num_obj, ok = QInputDialog.getInt(self, "Calibration", "Enter the number of objects:", 1, 1)
+            if ok:
+                self.log_window.append(f"{current_time} - Calibration is started")
+                self.num_obj = num_obj
+                self.log_window.append(f"{current_time} - Number of objects: {self.num_obj}")
+                self.setWindowTitle(f"GUI_Azure_Kinect - {num_obj} objects")
+                self.log_window.append(f"{current_time} - Calibration is done")
             else:
-                self.log_window.append(f"{current_time} - calibration failed")
-        except:
-            self.log_window.append(f"{current_time} - calibration failed - camera not connected")
+                return 
+            
+        except: 
+            self.log_window.append(f"{current_time} - Calibration is not possible")
+            
 
     def stop(self):
         current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
