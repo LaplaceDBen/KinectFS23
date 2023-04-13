@@ -23,8 +23,10 @@ class QRCodeDetector:
         # Open log file and write initial timestamp
         log_file = open('logfile.log', 'w')
         log_file.write(f"QR Code Detection Log ({time.strftime('%Y-%m-%d %H:%M:%S')})\n\n")
+        
 
         while True:
+            
             frame = k4a.get_capture()
             if frame is not None:
                 color_image = frame.color
@@ -32,7 +34,9 @@ class QRCodeDetector:
 
                 if len(decoded_objects) == num_obj:
                     qr_codes = [obj.data.decode("utf-8") for obj in decoded_objects]
-                    coords = [(obj.rect.left, obj.rect.top) for obj in decoded_objects]
+                    coords = [(int(obj.rect.left + obj.rect.width/2), int(obj.rect.top + obj.rect.height/2)) for obj in decoded_objects]
+                    #get angle of qr code
+                    
                     angles = []
 
                     # Draw bounding boxes and write qr code text and coordinates on image
@@ -87,6 +91,8 @@ class QRCodeDetector:
 
             key = cv2.waitKey(1)
             if key == 27 or key == 127: # Quit on Esc or Delete key
+                k4a.stop()
+                log_file.close()
                 break
 
         k4a.stop()

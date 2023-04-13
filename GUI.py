@@ -1,10 +1,12 @@
 import sys
+import os
 import datetime
 from detection_func import QRCodeDetector
 from PySide6.QtCore import QFile
 from PySide6.QtGui import QIcon, QFont
 from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QTextEdit, QPushButton, QScrollArea, QInputDialog,QMessageBox
 from PySide6.QtQuickControls2 import QQuickStyle
+import threading
 
 
 #help by chatgpt
@@ -14,6 +16,8 @@ class GUI_Azure_Kinect(QWidget):
         super().__init__()
 
         self.num_obj = None
+        self.active = False
+
 
         self.setWindowTitle('GUI_Azure_Kinect')
         self.setWindowIcon(QIcon('images\FHGR.jpg'))
@@ -37,6 +41,7 @@ class GUI_Azure_Kinect(QWidget):
         self.log_window.setFontFamily('Courier')
         self.log_window.setReadOnly(True)
 
+        
         self.scroll_area = QScrollArea()
         self.scroll_area.setWidget(self.log_window)
 
@@ -51,8 +56,6 @@ class GUI_Azure_Kinect(QWidget):
         if stylesheet.open(QFile.ReadOnly | QFile.Text):
     # Set the stylesheet for the application
             self.setStyleSheet(stylesheet.readAll().data().decode('utf-8'))
-    def log(self, message):
-        self.log_window.append(message) 
 
     def start(self):
         current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
@@ -60,6 +63,12 @@ class GUI_Azure_Kinect(QWidget):
             self.log_window.append(f"{current_time} - Could no start - number off objects is not calibrated")
         else:
             self.log_window.append(f"{current_time} - Programm is started - Number of objects: {self.num_obj}")
+            self.active = True
+            self.thread = threading.Thread(target=self.run_detector)
+            self.thread.start()
+
+    def run_detector(self):
+        while self.active:
             QRCodeDetector.detect_qr_codes(self.num_obj)
             
         
@@ -75,6 +84,7 @@ class GUI_Azure_Kinect(QWidget):
                 self.num_obj = num_obj
                 self.log_window.append(f"{current_time} - Number of objects: {self.num_obj}")
                 self.setWindowTitle(f"GUI_Azure_Kinect - {num_obj} objects")
+                self.active = True
                 self.log_window.append(f"{current_time} - Calibration is done")
             else:
                 return 
@@ -84,10 +94,15 @@ class GUI_Azure_Kinect(QWidget):
             
 
     def stop(self):
+        self.active = False
         current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
         self.log_window.append(f"{current_time} - Programm is stopped")
         current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
         self.log_window.append(f"{current_time} - Calibration is reset")
+        #terminate all running python threads
+        os.system("taskkill /f /im python.exe")
+        #terminate gui
+        self.close()
 
 
 if __name__ == '__main__':
