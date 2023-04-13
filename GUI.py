@@ -2,7 +2,7 @@ import sys
 import datetime
 from calibrate import detect_area
 #get testmacth from Detewction klass
-from detection_func import Detection
+from detection_func_OB import Detection
 from PySide6.QtCore import QFile
 from PySide6.QtGui import QIcon, QFont
 from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QTextEdit, QPushButton, QScrollArea
