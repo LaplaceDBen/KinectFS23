@@ -12,6 +12,7 @@ class QRCodeDetector:
     @staticmethod
     def detect_qr_codes(num_obj=5):
         k4a = camera_config
+
         k4a.start()
 
         cv2.namedWindow("QR Codes", cv2.WINDOW_NORMAL)

@@ -64,8 +64,9 @@ class GUI_Azure_Kinect(QWidget):
         else:
             self.log_window.append(f"{current_time} - Programm is started - Number of objects: {self.num_obj}")
             self.active = True
-            self.thread = threading.Thread(target=self.run_detector)
-            self.thread.start()
+            self.run_detector()
+
+            
 
     def run_detector(self):
         while self.active:
