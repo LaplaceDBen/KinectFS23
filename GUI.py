@@ -4,7 +4,7 @@ import datetime
 from detection_func import QRCodeDetector
 from PySide6.QtCore import QFile
 from PySide6.QtGui import QIcon, QFont
-from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QTextEdit, QPushButton, QScrollArea, QInputDialog,QMessageBox
+from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QTextEdit, QPushButton, QScrollArea, QInputDialog,QMessageBox,QCheckBox
 from PySide6.QtQuickControls2 import QQuickStyle
 import threading
 
@@ -16,7 +16,7 @@ class GUI_Azure_Kinect(QWidget):
         super().__init__()
 
         self.num_obj = None
-        self.active = False
+        
 
 
         self.setWindowTitle('GUI_Azure_Kinect')
@@ -33,6 +33,11 @@ class GUI_Azure_Kinect(QWidget):
 
         self.stop_button = QPushButton('Stop')
         self.stop_button.clicked.connect(self.stop)
+        
+        self.checkbox = QCheckBox('Display QR codes')
+        self.checkbox.setChecked(True)
+        #make space
+        
 
         self.log_window = QTextEdit()
         self.log_window.setPlaceholderText('Log')
@@ -48,6 +53,7 @@ class GUI_Azure_Kinect(QWidget):
         self.layout.addWidget(self.start_button)
         self.layout.addWidget(self.calibrate_button)
         self.layout.addWidget(self.stop_button)
+        self.layout.addWidget(self.checkbox)
         self.layout.addWidget(self.log_window)
 
                 # set stylesheet
@@ -71,6 +77,8 @@ class GUI_Azure_Kinect(QWidget):
     def run_detector(self):
         while self.active:
             QRCodeDetector.detect_qr_codes(self.num_obj)
+            #print checkbox
+            print(self.checkbox.isChecked())
             
         
         
@@ -95,7 +103,6 @@ class GUI_Azure_Kinect(QWidget):
             
 
     def stop(self):
-        self.active = False
         current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
         self.log_window.append(f"{current_time} - Programm is stopped")
         current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]

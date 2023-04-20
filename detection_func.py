@@ -160,7 +160,7 @@ class QR_Detector_3:
 
 
 #QRCodeDetector.detect_qr_codes(num_obj=5)
-detector = QR_Detector_3(num_objects=5)
-detector.run(display=True)
-detector.stop()
+#detector = QR_Detector_3(num_objects=5)
+#detector.run(display=True)
+#detector.stop()
 
