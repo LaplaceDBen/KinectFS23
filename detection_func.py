@@ -104,88 +104,12 @@ class QRCodeDetector:
 
 
 
-class QRCodeDetector_2:
-    
-    @staticmethod
-    def detect_qr_codes(num_obj=5):
-        k4a = camera_config
-        k4a.start()
-
-        cv2.namedWindow("QR Codes", cv2.WINDOW_NORMAL)
-        font = cv2.FONT_HERSHEY_SIMPLEX
-        font_scale = 1
-
-        # Create logger and log file
-        logger = logging.getLogger("QR Code Detection Log")
-        logger.setLevel(logging.DEBUG)
-        log_format = logging.Formatter('%(asctime)s - %(message)s')
-        file_handler = logging.FileHandler('logfile.log')
-        file_handler.setFormatter(log_format)
-        logger.addHandler(file_handler)
-
-        logger.info(f"QR Code Detection Log ({time.strftime('%Y-%m-%d %H:%M:%S')})\n\n")
-        
-        while True:
-            frame = k4a.get_capture()
-            if frame is None:
-                continue
-
-            color_image = frame.color
-            decoded_objects = decode(color_image)
-
-            if len(decoded_objects) != num_obj:
-                continue
-
-            qr_codes, coords, angles = [], [], []
-            for obj in decoded_objects:
-                qr_code = obj.data.decode("utf-8")
-                qr_codes.append(qr_code)
-
-                coord = (int(obj.rect.left + obj.rect.width/2), int(obj.rect.top + obj.rect.height/2))
-                coords.append(coord)
-
-                rect = cv2.minAreaRect(np.array(obj.polygon, np.int32))
-                angle = rect[2]
-                angles.append(angle)
-
-                cv2.polylines(
-                    color_image,
-                    [np.array(obj.polygon, np.int32).reshape((-1, 1, 2))],
-                    True,(0, 255, 0),2,)
-                
-                cv2.putText(
-                    color_image,qr_code,(obj.rect.left, obj.rect.top - 30),
-                    font,font_scale,(0, 255, 0),2,)
-                
-                cv2.putText(
-                    color_image,f"({coord[0]}, {coord[1]})",(coord[0], coord[1] - 10),font,
-                    font_scale,(0, 255, 0),2,)
-
-                logger.info(f"{qr_code} ({coord[0]}, {coord[1]}) Angle: {round(angle, 2)} ")
-                print(f"{qr_code} Angle: {round(angle, 2)} ({coord[0]}, {coord[1]})")
-
-            logger.handlers[0].flush()
-            print("\nNext Search: ", datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3])
-
-            cv2.imshow("QR Codes", color_image)
-            cv2.resizeWindow("QR Codes", (color_image.shape[1], color_image.shape[0]))
-
-            key = cv2.waitKey(1)
-            if key in [27, 127]:
-                k4a.stop()
-                logger.handlers[0].close()
-                break
-
-        k4a.stop()
-        logger.handlers[0].close()
-
-
 class QR_Detector_3:
     def __init__(self, num_objects):
         self.logger = logger.Logger()
         self.num_objects = num_objects
     
-    def run(self):
+    def run(self, display=False):
         k4a = PyK4A(
             Config(
                 color_resolution=pyk4a.ColorResolution.RES_1080P,
@@ -207,9 +131,22 @@ class QR_Detector_3:
                     log_line = f"{timestamp}"
                     for i, obj in enumerate(objects):
                         log_line += f", {obj.data.decode('utf-8')}, {obj.rect}, {obj.angle}"
+                        if display:
+                            cv2.putText(color_image, f"{i}: {obj.data.decode('utf-8')}", (obj.rect.left, obj.rect.top - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+                            cv2.drawContours(color_image, [obj.polygon.astype(int)], 0, (0, 255, 0), 2)
+                            cv2.line(color_image, (obj.rect.left, obj.rect.top), (obj.rect.left + obj.rect.width, obj.rect.top + obj.rect.height), (0, 255, 0), 2)
+                            cv2.line(color_image, (obj.rect.left + obj.rect.width, obj.rect.top), (obj.rect.left, obj.rect.top + obj.rect.height), (0, 255, 0), 2)
+
                     self.logger.log(log_line)
 
+                if display:
+                    cv2.imshow("QR Detector", color_image)
+                    if cv2.waitKey(1) & 0xFF == ord('q'):
+                        break
+
                 k4a.release_last_color_image()
+
+        cv2.destroyAllWindows()
 
     def stop(self):
         self.k4a.stop()
@@ -224,5 +161,6 @@ class QR_Detector_3:
 
 #QRCodeDetector.detect_qr_codes(num_obj=5)
 detector = QR_Detector_3(num_objects=5)
+detector.run(display=True)
 detector.stop()
 
