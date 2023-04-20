@@ -212,6 +212,7 @@ class QR_Detector_3:
                 k4a.release_last_color_image()
 
     def stop(self):
+        self.k4a.stop()
         self.logger.close()
 
 
