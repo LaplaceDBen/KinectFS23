@@ -79,6 +79,7 @@ class GUI_Azure_Kinect(QWidget):
             self.setStyleSheet(stylesheet.readAll().data().decode('utf-8'))
 
     def start(self):
+        self.config_button.setEnabled(False)
         current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
         if self.num_obj is None:
             self.log_window.append(f"{current_time} - Could no start - number off objects is not calibrated")
@@ -95,6 +96,7 @@ class GUI_Azure_Kinect(QWidget):
 
 
     def calibrate(self):
+        self.config_button.setEnabled(False)
         current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
         try:
             num_obj, ok = QInputDialog.getInt(self, "Calibration", "Enter the number of objects:", 1, 1)
@@ -116,6 +118,7 @@ class GUI_Azure_Kinect(QWidget):
             
 
     def stop(self):
+        self.config_button.setEnabled(True)
         current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
         self.log_window.append(f"{current_time} - Programm is stopped")
         current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
