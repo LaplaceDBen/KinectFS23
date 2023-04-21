@@ -1,18 +1,16 @@
 import cv2
 import numpy as np
 from pyzbar.pyzbar import decode
+from pyzbar import pyzbar
+from config import camera_config
 import pyk4a
 from pyk4a import Config, PyK4A
-import time
-from datetime import datetime
-from config import camera_config
-from numba import jit
 import logging
-import datetime
+from datetime import datetime
 
 
-class QRCodeDetector:
-    
+class QRCodeDetector_old:
+
     @staticmethod
     def detect_qr_codes(num_obj=5):
         k4a = camera_config
@@ -25,10 +23,9 @@ class QRCodeDetector:
         font = cv2.FONT_HERSHEY_SIMPLEX
         font_scale = 1
 
-        # Open log file and write initial timestamp
-        log_file = open('logfile.log', 'w')
-        log_file.write(f"QR Code Detection Log ({time.strftime('%Y-%m-%d %H:%M:%S')})\n\n")
-        
+        # Set up logging
+        logging.basicConfig(filename='logfile.log', level=logging.INFO, format='%(asctime)s - %(message)s')
+        logging.info(f"QR Code Detection Log ({datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')})\n\n")
 
         while True:
             
@@ -73,202 +70,87 @@ class QRCodeDetector:
                             2,
                         )
 
-                        # Get qr code angle and write it in the terminal
+                        # Get qr code angle and write it to the log
                         rect = cv2.minAreaRect(np.array(obj.polygon, np.int32))
                         angle = rect[2]
                         angles.append(angle)
-                        #print angle rounded with coordinates
+                        logging.info(f"{qr_codes[i]} ({coords[i][0]}, {coords[i][1]}) Angle: {round(angles[i], 2)} ")
 
-                        print(f"{qr_codes[i]} Angle: {round(angle, 2)} ({coords[i][0]}, {coords[i][1]})")
-
-                        # Write terminal output to log file
-                        log_file.write(f"{qr_codes[i]} ({coords[i][0]}, {coords[i][1]}) Angle: {round(angles[i], 2)} ")
-                        
-
+                    # Write timestamp to the log
+                    logging.info(f"({datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]})\n")
                     
-                    # Write timestamp to log file
-                #og_file.write(f"({datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]})\n")
-                log_file.flush()
-
-                print("\nNext Search: ", datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3])
-
+                # Display the image with the detected QR codes
                 cv2.imshow("QR Codes", color_image)
                 cv2.resizeWindow("QR Codes", (color_image.shape[1], color_image.shape[0]))
 
             key = cv2.waitKey(1) #wait for 1ms the loop will start again and we will process the next frame
             if key == 27 or key == 127: # Quit on Esc or Delete key
                 k4a.stop()
-                log_file.close()
                 break
 
         k4a.stop()
-        log_file.close()
+        logging.info("QR Code Detection ended\n")
 
 
-class QR_Detector_3:
-    def __init__(self, num_objects):
-        self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging.INFO)
-        handler = logging.FileHandler('QR_Detection.log')
-        handler.setLevel(logging.INFO)
-        formatter = logging.Formatter('%(asctime)s - %(message)s')
-        handler.setFormatter(formatter)
-        self.logger.addHandler(handler)
-        self.num_objects = num_objects
-        self.k4a = None
-        self.log_window = None 
 
-    def start(self):
-        self.k4a = pyk4a.PyK4A(
-            pyk4a.Config(
-                color_resolution=pyk4a.ColorResolution.RES_1080P,
-                depth_mode=pyk4a.DepthMode.NFOV_UNBINNED,
-                synchronized_images_only=True,
-            )
-        )
-        if not self.k4a.start():
-            print("No camera detected")
-            self.k4a = None
 
-        while self.k4a:
-            timestamp = time.time()
-            color_image = self.k4a.get_last_color_image()
-            if color_image is not None:
-                binary_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2GRAY)
-                _, binary_image = cv2.threshold(binary_image, 128, 255, cv2.THRESH_BINARY)
-                objects = pyzbar.decode(binary_image)
+class QRCodeDetector:
+    def __init__(self, num_qr_codes, config):
+        self.num_qr_codes = num_qr_codes
 
-                if len(objects) == self.num_objects:
-                    log_line = f"{timestamp}"
-                    for i, obj in enumerate(objects):
-                        log_line += f", {obj.data.decode('utf-8')}, {obj.rect}, {obj.angle}"
+        # Set up logging
+        logging.basicConfig(filename='qr_codes.log', level=logging.INFO, format='%(message)s')
 
-                    self.logger.info(log_line)
+        # Initialize PyK4A
+        self.k4a = config
+                
+        self.k4a.start()
 
-                self.k4a.release_last_color_image()
+    def detect_qr_codes(self):
+        # Capture a frame from the camera
+        capture = self.k4a.get_capture()
+        if capture.color is not None:
+            # Convert the color image to grayscale for QR code detection
+            gray = cv2.cvtColor(capture.color, cv2.COLOR_BGR2GRAY)
+            _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+            
 
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
+            
+            wait = cv2.waitKey(1)
+            # Detect QR codes in the grayscale image
+            qr_codes = pyzbar.decode(thresh)
 
-        cv2.destroyAllWindows()
-        if self.k4a is not None:
-            self.k4a.stop()
-            self.k4a = None
-            self.logger.handlers.clear()
+            # Check if the required number of QR codes has been found
+            
+            print(len(qr_codes))
+            if len(qr_codes) >= self.num_qr_codes:
+                # Write the QR code information to the log file
+                qr_codes_info = ''
+                for qr_code in qr_codes:
+                    qr_code_data = qr_code.data.decode()
+                    qr_code_rect = qr_code.rect
+                    #center of qr code
+                    qr_code_center = (qr_code_rect[0] + qr_code_rect[2] // 2, qr_code_rect[1] + qr_code_rect[3] // 2)
+                    qr_code_polygon = qr_code.polygon
+
+                    # Calculate orientation angle using QR code polygon
+                    x1, y1 = qr_code_polygon[0]
+                    x2, y2 = qr_code_polygon[1]
+                    x3, y3 = qr_code_polygon[2]
+                    x4, y4 = qr_code_polygon[3]
+                    angle = np.rad2deg(np.arctan2(y2-y1, x2-x1))
+
+                    qr_codes_info += f'{qr_code.type}: {qr_code_data}, {qr_code_center}, {angle:.2f} | '
+                    cv2.putText(gray, qr_code_data, (qr_code_rect[0], qr_code_rect[1]-10), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 0, 0), 5)
+                    cv2.namedWindow("QR Code Detector", cv2.WINDOW_NORMAL)
+                    cv2.resizeWindow("QR Code Detector", 1080,1080)
+                    
+                    cv2.imshow("QR Code Detector", gray)
+                logging.info(f'{qr_codes_info}{datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")}')
+
+        # Release the capture object
+        del capture
 
     def stop(self):
+        # Stop the camera capture
         self.k4a.stop()
-        self.k4a = None
-        self.logger.handlers.clear()
-
-
-
-class QR_Detector_4:
-    def __init__(self, num_objects):
-        self.num_objects = num_objects
-        
-        # Set up logger
-        self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging.INFO)
-        handler = logging.FileHandler('QR_Detection.log')
-        handler.setLevel(logging.INFO)
-        formatter = logging.Formatter('%(asctime)s - %(message)s')
-        handler.setFormatter(formatter)
-        self.logger.addHandler(handler)
-
-    def run(self, camera_config,display=False):
-        # Start the K4A camera
-        k4a = camera_config
-        
-        # Try to start the camera, log an error and exit if it fails
-        if not k4a.start():
-            print("No camera detected.")
-            self.logger.error("No camera detected.")
-            return
-
-        while True:
-            timestamp = time.time()
-            color_image = k4a.get_capture(convert_to_numpy=True).color
-            if color_image is not None:
-                binary_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2GRAY)
-                _, binary_image = cv2.threshold(binary_image, 128, 255, cv2.THRESH_BINARY)
-                objects = pyzbar.decode(binary_image)
-
-                if len(objects) == self.num_objects:
-                    log_line = f"{timestamp}"
-                    for i, obj in enumerate(objects):
-                        log_line += f", {obj.data.decode('utf-8')}, {obj.rect}, {obj.angle}"
-                        if display:
-                            cv2.putText(color_image, f"{i}: {obj.data.decode('utf-8')}", (obj.rect.left, obj.rect.top - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-                            cv2.drawContours(color_image, [obj.polygon.astype(int)], 0, (0, 255, 0), 2)
-                            cv2.line(color_image, (obj.rect.left, obj.rect.top), (obj.rect.left + obj.rect.width, obj.rect.top + obj.rect.height), (0, 255, 0), 2)
-                            cv2.line(color_image, (obj.rect.left + obj.rect.width, obj.rect.top), (obj.rect.left, obj.rect.top + obj.rect.height), (0, 255, 0), 2)
-
-                    self.logger.info(log_line)
-
-                if display:
-                    cv2.imshow("QR Detector", color_image)
-                    if cv2.waitKey(1) & 0xFF == ord('q'):
-                        break
-
-                k4a.release_capture()
-
-        cv2.destroyAllWindows()
-
-    def stop(self):
-        k4a.stop()
-        self.logger.handlers.clear()
-        
-        
-def calibration_info(num_codes, num_runs):
-    k4a = PyK4A(
-        Config(
-            color_resolution=pyk4a.ColorResolution.RES_1080P,
-            depth_mode=pyk4a.DepthMode.NFOV_UNBINNED,
-            synchronized_images_only=True,
-        )
-    )
-
-    times = []
-    for _ in range(num_runs):
-        start_time = time.time()
-        found_codes = 0
-        while found_codes < num_codes and time.time() - start_time < 5:
-            # Capture synchronized color and depth images
-            k4a.get_capture()
-            color_image = k4a.color_image
-
-            # Convert color image to grayscale
-            gray_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2GRAY)
-
-            # Decode QR codes in grayscale image
-            qr_codes = decode(gray_image)
-
-            # Count the number of QR codes found
-            found_codes = len(qr_codes)
-
-        end_time = time.time()
-        times.append(end_time - start_time)
-    
-    k4a.stop()
-    
-    # Calculate mean and standard deviation of times
-    total_time = sum(times)
-    mean_time = total_time / num_runs
-    std_time = sum((t - mean_time) ** 2 for t in times) ** 0.5 / num_runs
-    
-    return mean_time, std_time
-
-
-
-
-
-
-
-'''
-QRCodeDetector.detect_qr_codes(num_obj=5)
-detector = QR_Detector_3(num_objects=5)
-detector.run(display=True)
-detector.stop()
-'''
-

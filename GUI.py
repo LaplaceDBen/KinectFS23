@@ -1,7 +1,7 @@
 import sys
 import os
 import datetime
-from detection_func import QRCodeDetector,QR_Detector_3, QR_Detector_4, calibration_info
+from detection_func import QRCodeDetector
 from PySide6.QtCore import QFile
 from PySide6.QtGui import QIcon, QFont
 from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QTextEdit,QPushButton, QScrollArea, QInputDialog,QMessageBox,QCheckBox,QComboBox,QDialog,QDialogButtonBox,QFormLayout,QLabel,QLineEdit,QSpinBox,QVBoxLayout
@@ -21,7 +21,7 @@ class GUI_Azure_Kinect(QWidget):
 
     def __init__(self):
         super().__init__()
-
+        self.active=True
         self.num_obj = None
         self.detector = None
         self.camera_config = camera_config
@@ -79,6 +79,7 @@ class GUI_Azure_Kinect(QWidget):
             self.setStyleSheet(stylesheet.readAll().data().decode('utf-8'))
 
     def start(self):
+        self.active=True
         self.config_button.setEnabled(False)
         current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
         if self.num_obj is None:
@@ -87,7 +88,10 @@ class GUI_Azure_Kinect(QWidget):
             self.log_window.append(f"{current_time} - Programm is started - Number of objects: {self.num_obj}")
             self.calibrate_button.setEnabled(False)
             
-            self.detector.run(self.camera_config,display=self.checkbox.isChecked())
+            #run the detection
+            qrcode_detector = QRCodeDetector(num_qr_codes=self.num_obj,config=self.camera_config)
+            while self.active:
+                qrcode_detector.detect_qr_codes()
             #disable calibration button
             
             
@@ -101,15 +105,15 @@ class GUI_Azure_Kinect(QWidget):
         try:
             self.num_obj, ok = QInputDialog.getInt(self, "Calibration", "Enter the number of objects:", 1, 1)
             if ok:
-                self.detector = QR_Detector_4(num_objects= self.num_obj)
+                
                 self.log_window.append(f"{current_time} - Calibration is started")
                 self.log_window.append(f"{current_time} - Number of objects: {self.num_obj}")
                 
-                mean,std= calibration_info(num_codes=self.num_obj,num_runs=10)
-                self.log_window.append(f"{current_time} - Estimated detection time: {mean:.2f} s , standard deviation: {std:.2f} s")
+                #mean,std= calibration_info(num_codes=self.num_obj,num_runs=10)
+                #self.log_window.append(f"{current_time} - Estimated detection time: {mean:.2f} s , standard deviation: {std:.2f} s")
                 
-                self.setWindowTitle(f"GUI_Azure_Kinect - {self.num_obj} objects, estimated detection time {mean:.2f} s")
-                self.active = True
+                self.setWindowTitle(f"GUI_Azure_Kinect - {self.num_obj} objects")
+                
                 self.log_window.append(f"{current_time} - Calibration is done")
                 self.start_button.setEnabled(True)
                 self.stop_button.setEnabled(True)
@@ -121,6 +125,7 @@ class GUI_Azure_Kinect(QWidget):
             
 
     def stop(self):
+        self.active=False
         self.config_button.setEnabled(True)
         current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
         self.log_window.append(f"{current_time} - Programm is stopped")
@@ -129,10 +134,7 @@ class GUI_Azure_Kinect(QWidget):
         #enable calibration button
         self.calibrate_button.setEnabled(True)
         #if detector is running
-        try:
-             self.detector.stop()
-        except:
-            pass
+
            
 
     def config(self):
