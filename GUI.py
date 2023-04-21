@@ -1,7 +1,7 @@
 import sys
 import os
 import datetime
-from detection_func import QRCodeDetector,QR_Detector_3, QR_Detector_4
+from detection_func import QRCodeDetector,QR_Detector_3, QR_Detector_4, calibration_info
 from PySide6.QtCore import QFile
 from PySide6.QtGui import QIcon, QFont
 from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QTextEdit,QPushButton, QScrollArea, QInputDialog,QMessageBox,QCheckBox,QComboBox,QDialog,QDialogButtonBox,QFormLayout,QLabel,QLineEdit,QSpinBox,QVBoxLayout
@@ -99,17 +99,20 @@ class GUI_Azure_Kinect(QWidget):
         self.config_button.setEnabled(False)
         current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
         try:
-            num_obj, ok = QInputDialog.getInt(self, "Calibration", "Enter the number of objects:", 1, 1)
+            self.num_obj, ok = QInputDialog.getInt(self, "Calibration", "Enter the number of objects:", 1, 1)
             if ok:
-                self.detector = QR_Detector_4(num_objects=5)
-                self.start_button.setEnabled(True)
-                self.stop_button.setEnabled(True)
+                self.detector = QR_Detector_4(num_objects= self.num_obj)
                 self.log_window.append(f"{current_time} - Calibration is started")
-                self.num_obj = num_obj
                 self.log_window.append(f"{current_time} - Number of objects: {self.num_obj}")
-                self.setWindowTitle(f"GUI_Azure_Kinect - {num_obj} objects")
+                
+                mean,std= calibration_info(num_codes=self.num_obj,num_runs=10)
+                self.log_window.append(f"{current_time} - Estimated detection time: {mean:.2f} s , standard deviation: {std:.2f} s")
+                
+                self.setWindowTitle(f"GUI_Azure_Kinect - {self.num_obj} objects, estimated detection time {mean:.2f} s")
                 self.active = True
                 self.log_window.append(f"{current_time} - Calibration is done")
+                self.start_button.setEnabled(True)
+                self.stop_button.setEnabled(True)
             else:
                 return 
             

@@ -218,6 +218,46 @@ class QR_Detector_4:
     def stop(self):
         k4a.stop()
         self.logger.handlers.clear()
+        
+        
+def calibration_info(num_codes, num_runs):
+    k4a = PyK4A(
+        Config(
+            color_resolution=pyk4a.ColorResolution.RES_1080P,
+            depth_mode=pyk4a.DepthMode.NFOV_UNBINNED,
+            synchronized_images_only=True,
+        )
+    )
+
+    times = []
+    for _ in range(num_runs):
+        start_time = time.time()
+        found_codes = 0
+        while found_codes < num_codes and time.time() - start_time < 5:
+            # Capture synchronized color and depth images
+            k4a.get_capture()
+            color_image = k4a.color_image
+
+            # Convert color image to grayscale
+            gray_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2GRAY)
+
+            # Decode QR codes in grayscale image
+            qr_codes = decode(gray_image)
+
+            # Count the number of QR codes found
+            found_codes = len(qr_codes)
+
+        end_time = time.time()
+        times.append(end_time - start_time)
+    
+    k4a.stop()
+    
+    # Calculate mean and standard deviation of times
+    total_time = sum(times)
+    mean_time = total_time / num_runs
+    std_time = sum((t - mean_time) ** 2 for t in times) ** 0.5 / num_runs
+    
+    return mean_time, std_time
 
 
 
