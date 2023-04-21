@@ -163,6 +163,7 @@ class GUI_Azure_Kinect(QWidget):
             layout.addRow(buttons)
             
             
+            
 
             # show dialog and wait for result
             result = dialog.exec()
