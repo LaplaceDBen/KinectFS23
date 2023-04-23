@@ -33,14 +33,6 @@ def main():
                 cv2.destroyAllWindows()
                 break
 
-            # save image every second
-            if count % 30 == 0:
-                cv2.imwrite(f"image_{count}.png", capture.color[:, :, :3])
-                print(f"Saved image_{count}.png")
-            count += 1
-
-        # wait for 1 millisecond
-        time.sleep(0.033)
 
     k4a.stop()
 

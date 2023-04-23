@@ -20,3 +20,7 @@ QTextEdit {
     font-family: Courier;
     padding: 4px;
 }
+
+QCheckBox {
+    color: rgb(5, 5, 5);
+}

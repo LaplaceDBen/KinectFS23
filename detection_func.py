@@ -1,212 +1,156 @@
-import pyk4a
-from helpers import colorize
-from pyk4a import Config, PyK4A, connected_device_count
-import numpy as np
-import pandas as pd
 import cv2
+import numpy as np
+from pyzbar.pyzbar import decode
+from pyzbar import pyzbar
+from config import camera_config
+import pyk4a
+from pyk4a import Config, PyK4A
+import logging
+from datetime import datetime
 
 
-class Detection:
-    def __init__(self):
-        self.device_id = self.get_device_id()
-
-    @staticmethod
-    def get_device_id():
-        cnt = connected_device_count()
-        if not cnt:
-            print("No devices available")
-            exit()
-        print(f"Available devices: {cnt}")
-        for device_id in range(cnt):
-            device = PyK4A(device_id=device_id)
-            device.open()
-            print(f"{device_id}: {device.serial}")
-            device.close()
-            return device_id
-    @staticmethod
-    def detect_objects( image_path, accuracy_threshold, max_size_ratio):
-        # ChatGPT
-        image = cv2.imread(image_path)
-
-        # Convert to grayscale
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-
-        # Threshold the image
-        _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-
-        # Find contours in the image
-        contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-
-        # Create a list to store the size, centerpoint, and accuracy of each object
-        objects = []
-
-        # Iterate through the contours and append the size, centerpoint, and accuracy to the objects list
-        for contour in contours:
-            # Get the area of the contour
-            area = cv2.contourArea(contour)
-
-            # Skip contours with zero area
-            if area == 0:
-                continue
-
-            # Get the moments of the contour
-            moments = cv2.moments(contour)
-
-            # Calculate the centroid of the contour
-            cx = int(moments['m10'] / moments['m00'])
-            cy = int(moments['m01'] / moments['m00'])
-
-            # Get the perimeter of the contour
-            perimeter = cv2.arcLength(contour, True)
-
-            # Approximate the shape of the contour as a polygon
-            approx = cv2.approxPolyDP(contour, 0.04 * perimeter, True)
-
-            # Calculate the number of vertices in the polygon
-            vertices = len(approx)
-
-            # Calculate the accuracy of the polygon to a square
-            accuracy = abs(1 - (area / (perimeter ** 2 / 4)))
-
-            # Check if the object is too large
-            height, width = image.shape[:2]
-            size_ratio = area / (height * width)
-            if size_ratio > max_size_ratio:
-                continue
-
-            # Append the size, centerpoint, and accuracy to the objects list
-            objects.append([area, (cx, cy), accuracy])
-
-            # Draw the contour and centerpoint if the accuracy is above the threshold
-            if accuracy > accuracy_threshold:
-                cv2.drawContours(image, [contour], -1, (255, 255, 255), 2)
-                cv2.drawMarker(image, (cx, cy), (0, 0, 255), cv2.MARKER_CROSS, 10, 2)
-                # add area to contour on image
-                cv2.putText(image, str(area), (cx, cy), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
-
-        # Create a Pandas dataframe from the objects list
-        df = pd.DataFrame
-        df = pd.DataFrame(objects, columns=['area', 'centerpoint', 'accuracy'])
-        
-        return df, image
+class QRCodeDetector_old:
 
     @staticmethod
-    def live_depth():
+    def detect_qr_codes(num_obj=5):
+        k4a = camera_config
 
-        #Modifikation of viewer depth
-        k4a = PyK4A(
-            Config(
-                color_resolution=pyk4a.ColorResolution.OFF,
-                depth_mode=pyk4a.DepthMode.NFOV_UNBINNED,
-                synchronized_images_only=False,
-            )
-        )
         k4a.start()
 
-        # getters and setters directly get and set on device
-        k4a.whitebalance = 4500
-        assert k4a.whitebalance == 4500
-        k4a.whitebalance = 4510
-        assert k4a.whitebalance == 4510
+        cv2.namedWindow("QR Codes", cv2.WINDOW_NORMAL)
+
+        # Set font and scale for text and coordinates
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        font_scale = 1
+
+        # Set up logging
+        logging.basicConfig(filename='logfile.log', level=logging.INFO, format='%(asctime)s - %(message)s')
+        logging.info(f"QR Code Detection Log ({datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')})\n\n")
 
         while True:
-            capture = k4a.get_capture()
-            if np.any(capture.depth):
-                # Convert depth image to a normalized 8-bit image
-                depth_norm = cv2.normalize(capture.depth, None, 0, 255, cv2.NORM_MINMAX, cv2.CV_8UC1)
+            
+            frame = k4a.get_capture()
+            if frame is not None:
+                color_image = frame.color
+                decoded_objects = decode(color_image)
 
-                # Apply a threshold to create a binary image
-                _, threshold = cv2.threshold(depth_norm, 100, 255, cv2.THRESH_BINARY)
+                if len(decoded_objects) == num_obj:
+                    qr_codes = [obj.data.decode("utf-8") for obj in decoded_objects]
+                    coords = [(int(obj.rect.left + obj.rect.width/2), int(obj.rect.top + obj.rect.height/2)) for obj in decoded_objects]
+                    #get angle of qr code
+                    
+                    angles = []
 
-                # Find contours in the binary image
-                contours, _ = cv2.findContours(threshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                    # Draw bounding boxes and write qr code text and coordinates on image
+                    for i in range(num_obj):
+                        obj = decoded_objects[i]
+                        cv2.polylines(
+                            color_image,
+                            [np.array(obj.polygon, np.int32).reshape((-1, 1, 2))],
+                            True,
+                            (0, 255, 0),
+                            2,
+                        )
+                        cv2.putText(
+                            color_image,
+                            qr_codes[i],
+                            (obj.rect.left, obj.rect.top - 30),
+                            font,
+                            font_scale,
+                            (0, 255, 0),
+                            2,
+                        )
+                        cv2.putText(
+                            color_image,
+                            f"({coords[i][0]}, {coords[i][1]})",
+                            (coords[i][0], coords[i][1] - 10),
+                            font,
+                            font_scale,
+                            (0, 255, 0),
+                            2,
+                        )
 
-                closest_depth = float('inf')
+                        # Get qr code angle and write it to the log
+                        rect = cv2.minAreaRect(np.array(obj.polygon, np.int32))
+                        angle = rect[2]
+                        angles.append(angle)
+                        logging.info(f"{qr_codes[i]} ({coords[i][0]}, {coords[i][1]}) Angle: {round(angles[i], 2)} ")
 
-                # Loop through each contour
-                for contour in contours:
-                    # Calculate the depth of the object by finding the mean depth value within the contour
-                    mask = np.zeros_like(capture.depth)
-                    cv2.drawContours(mask, [contour], 0, 255, -1)
-                    depth_values = capture.depth[np.where(mask > 0)]
-                    depth = np.mean(depth_values)
+                    # Write timestamp to the log
+                    logging.info(f"({datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]})\n")
+                    
+                # Display the image with the detected QR codes
+                cv2.imshow("QR Codes", color_image)
+                cv2.resizeWindow("QR Codes", (color_image.shape[1], color_image.shape[0]))
 
-                    if depth < closest_depth:
-                        closest_depth = depth
-
-                # Write the closest depth in black
-                cv2.putText(depth_norm, f"Depth: {closest_depth:.2f} mm", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
-
-                cv2.imshow("k4a", colorize(depth_norm, (None, 5000), cv2.COLORMAP_HSV))
-                key = cv2.waitKey(10)
-                if key != -1:
-                    cv2.destroyAllWindows()
-                    break
-
-        k4a.stop()
-
-    @staticmethod
-    def largest_rectangle():
-        #Generated by CHATGPT
-        k4a = PyK4A(
-            Config(
-                color_resolution=pyk4a.ColorResolution.RES_720P,
-                depth_mode=pyk4a.DepthMode.NFOV_UNBINNED,
-                synchronized_images_only=True,
-            )
-        )
-        k4a.start()
-
-        # getters and setters directly get and set on device
-        k4a.whitebalance = 4500
-        assert k4a.whitebalance == 4500
-        k4a.whitebalance = 4510
-        assert k4a.whitebalance == 4510
-
-        max_rect_area = 0  # Variable to store the largest rectangle area found
-        while True:
-            capture = k4a.get_capture()
-            if np.any(capture.color):
-                # Convert the color image to grayscale
-                gray = cv2.cvtColor(capture.color, cv2.COLOR_BGR2GRAY)
-
-                # Apply Canny edge detection to the grayscale image
-                edges = cv2.Canny(gray, 100, 200)
-
-                # Find contours in the edge map
-                contours, hierarchy = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-
-                # Loop over the contours and find rectangular ones
-                for cnt in contours:
-                    # Approximate the contour to a polygon
-                    approx = cv2.approxPolyDP(cnt, 0.01 * cv2.arcLength(cnt, True), True)
-
-                    # If the polygon has 4 vertices, it is likely a rectangle
-                    if len(approx) == 4:
-                        # Calculate the area of the rectangle
-                        rect_area = cv2.contourArea(approx)
-
-                        # If the area is larger than the previous largest, update the largest area and rectangle
-                        if rect_area > max_rect_area:
-                            max_rect_area = rect_area
-                            max_rect = approx
-
-                # Draw the largest rectangle on the color image
-                if max_rect_area > 0:
-                    cv2.drawContours(capture.color, [max_rect], 0, (0, 255, 0), 3)
-                    print("Largest rectangle area:", max_rect_area)
-                else:
-                    print("No rectangular object found.")
-
-                # Display the color image with the largest rectangle
-                cv2.imshow("k4a", capture.color)
-
-                # Exit if any key is pressed
-                key = cv2.waitKey(10)
-                if key != -1:
-                    cv2.destroyAllWindows()
-                    break
+            key = cv2.waitKey(1) #wait for 1ms the loop will start again and we will process the next frame
+            if key == 27 or key == 127: # Quit on Esc or Delete key
+                k4a.stop()
+                break
 
         k4a.stop()
+        logging.info("QR Code Detection ended\n")
 
-        
+
+
+
+class QRCodeDetector:
+    def __init__(self, num_qr_codes, config):
+        self.num_qr_codes = num_qr_codes
+
+        # Set up logging
+        logging.basicConfig(filename='qr_codes.log', level=logging.INFO, format='%(message)s')
+
+        # Initialize PyK4A
+        self.k4a = config
+                
+        self.k4a.start()
+
+    def detect_qr_codes(self):
+        # Capture a frame from the camera
+        capture = self.k4a.get_capture()
+        if capture.color is not None:
+            # Convert the color image to grayscale for QR code detection
+            gray = cv2.cvtColor(capture.color, cv2.COLOR_BGR2GRAY)
+            _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+            
+
+            
+            wait = cv2.waitKey(1)
+            # Detect QR codes in the grayscale image
+            qr_codes = pyzbar.decode(thresh)
+
+            # Check if the required number of QR codes has been found
+            
+            print(len(qr_codes))
+            if len(qr_codes) >= self.num_qr_codes:
+                # Write the QR code information to the log file
+                qr_codes_info = ''
+                for qr_code in qr_codes:
+                    qr_code_data = qr_code.data.decode()
+                    qr_code_rect = qr_code.rect
+                    #center of qr code
+                    qr_code_center = (qr_code_rect[0] + qr_code_rect[2] // 2, qr_code_rect[1] + qr_code_rect[3] // 2)
+                    qr_code_polygon = qr_code.polygon
+
+                    # Calculate orientation angle using QR code polygon
+                    x1, y1 = qr_code_polygon[0]
+                    x2, y2 = qr_code_polygon[1]
+                    x3, y3 = qr_code_polygon[2]
+                    x4, y4 = qr_code_polygon[3]
+                    angle = np.rad2deg(np.arctan2(y2-y1, x2-x1))
+
+                    qr_codes_info += f'{qr_code.type}: {qr_code_data}, {qr_code_center}, {angle:.2f} | '
+                    cv2.putText(gray, qr_code_data, (qr_code_rect[0], qr_code_rect[1]-10), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 0, 0), 5)
+                    cv2.namedWindow("QR Code Detector", cv2.WINDOW_NORMAL)
+                    cv2.resizeWindow("QR Code Detector", 1080,1080)
+                    
+                    cv2.imshow("QR Code Detector", gray)
+                logging.info(f'{qr_codes_info}{datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")}')
+
+        # Release the capture object
+        del capture
+
+    def stop(self):
+        # Stop the camera capture
+        self.k4a.stop()
