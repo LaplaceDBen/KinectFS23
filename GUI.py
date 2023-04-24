@@ -1,6 +1,7 @@
 import sys
 import os
 import datetime
+import matplotlib.pyplot as plt
 from detection_func import QRCodeDetector,QRCodeDetector_time
 from PySide6.QtCore import QFile
 from PySide6.QtGui import QIcon, QFont
@@ -115,8 +116,10 @@ class GUI_Azure_Kinect(QWidget):
                 self.log_window.append(f"{current_time} - Number of objects: {self.num_obj}")
                 self.log_window.append("wait for Threashold calibration to finish...")
                 qr_detector_avg = QRCodeDetector_time(self.num_obj)
-                self.thresh  = qr_detector_avg.detect_qr_codes_avg()
-                self.log_window.append(f"{current_time} - Best Threshold found: {self.thresh}")
+                self.thresh, avg_time ,std_time   = qr_detector_avg.detect_qr_codes_avg()
+                self.log_window.append(f"{current_time} - Best Threshold found: {self.thresh}, Average detection time: {avg_time:.2f} s , standard deviation: {std_time:.2f} s")
+                
+                #self.log_window.append("wait for Threashold calibration to finish...")
                 
                 #mean,std= calibration_info(num_codes=self.num_obj,num_runs=10)
                 #self.log_window.append(f"{current_time} - Estimated detection time: {mean:.2f} s , standard deviation: {std:.2f} s")
