@@ -2,7 +2,7 @@ import sys
 import os
 import datetime
 import matplotlib.pyplot as plt
-from detection_func import QRCodeDetector,QRCodeDetector_time
+from detection_func import QRCodeDetector,QRCodeDetector_time, QRCodeDetector_check
 from PySide6.QtCore import QFile
 from PySide6.QtGui import QIcon, QFont
 from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QTextEdit,QPushButton, QScrollArea, QInputDialog,QMessageBox,QCheckBox,QComboBox,QDialog,QDialogButtonBox,QFormLayout,QLabel,QLineEdit,QSpinBox,QVBoxLayout
@@ -109,7 +109,12 @@ class GUI_Azure_Kinect(QWidget):
             if ok:
                 
                 self.log_window.append(f"{current_time} - Calibration is started")
-                
+                try:
+                    attempts, detected_codes = QRCodeDetector_check(self.num_obj).detect_qr_codes()
+                    self.log_window.append(f"{current_time} - Needed {attempts} attempts to find {self.num_obj} objects")
+                    
+                except:
+                    self.log_window.append(f"{current_time} - Calibration is not possible- Failed to find {self.num_obj} objects")
                 
 
 
@@ -117,7 +122,7 @@ class GUI_Azure_Kinect(QWidget):
                 self.log_window.append("wait for Threashold calibration to finish...")
                 qr_detector_avg = QRCodeDetector_time(self.num_obj)
                 self.thresh, avg_time ,std_time   = qr_detector_avg.detect_qr_codes_avg()
-                self.log_window.append(f"{current_time} - Best Threshold found: {self.thresh}, Average detection time: {avg_time:.2f} s , standard deviation: {std_time:.2f} s")
+                self.log_window.append(f"{current_time} - Best Threshold found: {self.thresh}, Average detection time: {avg_time:.5f} s , standard deviation: {std_time:.5f}")
                 
                 #self.log_window.append("wait for Threashold calibration to finish...")
                 

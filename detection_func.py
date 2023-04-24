@@ -10,88 +10,6 @@ from datetime import datetime
 import time
 import matplotlib.pyplot as plt
 
-class QRCodeDetector_old:
-
-    @staticmethod
-    def detect_qr_codes(num_obj=5):
-        k4a = camera_config
-
-        k4a.start()
-
-        cv2.namedWindow("QR Codes", cv2.WINDOW_NORMAL)
-
-        # Set font and scale for text and coordinates
-        font = cv2.FONT_HERSHEY_SIMPLEX
-        font_scale = 1
-
-        # Set up logging
-        logging.basicConfig(filename='logfile.log', level=logging.INFO, format='%(asctime)s - %(message)s')
-        logging.info(f"QR Code Detection Log ({datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')})\n\n")
-
-        while True:
-            
-            frame = k4a.get_capture()
-            if frame is not None:
-                color_image = frame.color
-                decoded_objects = decode(color_image)
-
-                if len(decoded_objects) == num_obj:
-                    qr_codes = [obj.data.decode("utf-8") for obj in decoded_objects]
-                    coords = [(int(obj.rect.left + obj.rect.width/2), int(obj.rect.top + obj.rect.height/2)) for obj in decoded_objects]
-                    #get angle of qr code
-                    
-                    angles = []
-
-                    # Draw bounding boxes and write qr code text and coordinates on image
-                    for i in range(num_obj):
-                        obj = decoded_objects[i]
-                        cv2.polylines(
-                            color_image,
-                            [np.array(obj.polygon, np.int32).reshape((-1, 1, 2))],
-                            True,
-                            (0, 255, 0),
-                            2,
-                        )
-                        cv2.putText(
-                            color_image,
-                            qr_codes[i],
-                            (obj.rect.left, obj.rect.top - 30),
-                            font,
-                            font_scale,
-                            (0, 255, 0),
-                            2,
-                        )
-                        cv2.putText(
-                            color_image,
-                            f"({coords[i][0]}, {coords[i][1]})",
-                            (coords[i][0], coords[i][1] - 10),
-                            font,
-                            font_scale,
-                            (0, 255, 0),
-                            2,
-                        )
-
-                        # Get qr code angle and write it to the log
-                        rect = cv2.minAreaRect(np.array(obj.polygon, np.int32))
-                        angle = rect[2]
-                        angles.append(angle)
-                        logging.info(f"{qr_codes[i]} ({coords[i][0]}, {coords[i][1]}) Angle: {round(angles[i], 2)} ")
-
-                    # Write timestamp to the log
-                    logging.info(f"({datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]})\n")
-                    
-                # Display the image with the detected QR codes
-                cv2.imshow("QR Codes", color_image)
-                cv2.resizeWindow("QR Codes", (color_image.shape[1], color_image.shape[0]))
-
-            key = cv2.waitKey(1) #wait for 1ms the loop will start again and we will process the next frame
-            if key == 27 or key == 127: # Quit on Esc or Delete key
-                k4a.stop()
-                break
-
-        k4a.stop()
-        logging.info("QR Code Detection ended\n")
-
 
 
 
@@ -115,7 +33,7 @@ class QRCodeDetector:
             # Convert the color image to grayscale for QR code detection
             gray = cv2.cvtColor(capture.color, cv2.COLOR_BGR2GRAY)
             #_, thresh = cv2.threshold(gray, self.threashold, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)slower filter
-            _, thresh = cv2.threshold(gray, j, 255, cv2.THRESH_TRUNC)
+            _, thresh = cv2.threshold(gray, self.threashold, 255, cv2.THRESH_TRUNC)
             
 
             
@@ -239,7 +157,7 @@ class QRCodeDetector_time:
         min_x = thresh_values[avg_times.index(min_y)]
 
         # Add an arrow annotation at the minimum value
-        plt.annotate(f'{min_y:.4f} sec', xy=(min_x,min_y), xytext=(min_x+10,min_y+0.1), arrowprops=dict(facecolor='black', arrowstyle='->'))
+        plt.annotate(f'{min_y:.4f} sec', xy=(min_x,min_y), xytext=(min_x+1,min_y+0.1), arrowprops=dict(facecolor='black', arrowstyle='->'))
 
         # Get the maximum x and y values
         xmax = ax.get_xlim()[1]
@@ -254,3 +172,32 @@ class QRCodeDetector_time:
 
 
 
+
+
+class QRCodeDetector_check():
+    def __init__(self, num_qr_codes):
+        self.num_qr_codes = num_qr_codes
+        self.k4a = camera_config
+        self.k4a.start()
+
+    def detect_qr_codes(self):
+        qr_codes = {}
+        attempts = 0
+        while len(qr_codes) < self.num_qr_codes:
+            frame = self.k4a.get_capture()
+            grey = cv2.cvtColor(frame.color, cv2.COLOR_BGR2GRAY)
+            if frame is not None:
+                color_image = frame.color
+                decoded_objects = decode(grey)
+                for obj in decoded_objects:
+                    qr_codes[obj.data.decode('utf-8')] = obj.type
+            attempts += 1
+            if attempts >= 100:
+                raise Exception(f"Failed to find {self.num_qr_codes} different QR codes after {attempts} attempts")
+        
+        with open('objects.txt', 'w') as f:
+            for key, value in qr_codes.items():
+                f.write(f'{key}: {value}\n')
+        
+        self.k4a.stop()
+        return attempts, len(qr_codes)
