@@ -107,13 +107,17 @@ class GUI_Azure_Kinect(QWidget):
         try:
             self.num_obj, ok = QInputDialog.getInt(self, "Calibration", "Enter the number of objects:", 1, 1)
             if ok:
-                
+                current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
                 self.log_window.append(f"{current_time} - Calibration is started")
+                
                 try:
+                    current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
                     attempts, detected_codes = QRCodeDetector_check(self.num_obj).detect_qr_codes()
+                    current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
                     self.log_window.append(f"{current_time} - Needed {attempts} attempts to find {self.num_obj} objects")
                     
                 except:
+                    current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
                     self.log_window.append(f"{current_time} - Calibration is not possible- Failed to find {self.num_obj} objects")
                 
 
@@ -122,6 +126,7 @@ class GUI_Azure_Kinect(QWidget):
                 self.log_window.append("wait for Threashold calibration to finish...")
                 qr_detector_avg = QRCodeDetector_time(self.num_obj)
                 self.thresh, avg_time ,std_time   = qr_detector_avg.detect_qr_codes_avg()
+                current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
                 self.log_window.append(f"{current_time} - Best Threshold found: {self.thresh}, Average detection time: {avg_time:.5f} s , standard deviation: {std_time:.5f}")
                 
                 #self.log_window.append("wait for Threashold calibration to finish...")
@@ -165,7 +170,7 @@ class GUI_Azure_Kinect(QWidget):
             # create dropdowns
             label = QLabel('Resolution')
             dropdown1 = QComboBox()
-            dropdown1.addItems(['720P','1080P','2160P'])
+            dropdown1.addItems(['2160P', '1080P','720P'])
             layout.addRow(label, dropdown1)
 
             label = QLabel('Synchronized images only')

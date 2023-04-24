@@ -89,7 +89,7 @@ class QRCodeDetector_time:
 
     def detect_qr_codes_avg(self):
         #thresh_values from 50 to 255
-        thresh_values = np.arange(50, 256, 10)
+        thresh_values = np.arange(50, 256, 1)
         min_avg_time = float('inf')
         min_std_time = float('inf')
         best_thresh = None
@@ -190,7 +190,7 @@ class QRCodeDetector_check():
                 for obj in decoded_objects:
                     qr_codes[obj.data.decode('utf-8')] = obj.type
             attempts += 1
-            if attempts >= 1000:
+            if attempts >= 250:
                 raise Exception(f"Failed to find {self.num_qr_codes} different QR codes after {attempts} attempts")
         
         with open('objects.txt', 'w') as f:
