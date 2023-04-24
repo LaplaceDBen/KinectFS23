@@ -14,13 +14,13 @@ import matplotlib.pyplot as plt
 
 
 class QRCodeDetector:
-    def __init__(self, num_qr_codes, t, config):
+    def __init__(self, num_qr_codes, t, config, display=True):
         self.num_qr_codes = num_qr_codes
 
         # Set up logging
         logging.basicConfig(filename='qr_codes.log', level=logging.INFO, format='%(message)s')
         self.threashold = t
-
+        self.display = display
         # Initialize PyK4A
         self.k4a = config
                 
@@ -60,13 +60,13 @@ class QRCodeDetector:
                     x3, y3 = qr_code_polygon[2]
                     x4, y4 = qr_code_polygon[3]
                     angle = np.rad2deg(np.arctan2(y2-y1, x2-x1))
-
-                    qr_codes_info += f'{qr_code.type}: {qr_code_data}, {qr_code_center}, {angle:.2f} | '
-                    cv2.putText(gray, qr_code_data, (qr_code_rect[0], qr_code_rect[1]-10), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 0, 0), 5)
-                    cv2.namedWindow("QR Code Detector", cv2.WINDOW_NORMAL)
-                    cv2.resizeWindow("QR Code Detector", 1080,1080)
-                    
-                    cv2.imshow("QR Code Detector", gray)
+                    if self.display:
+                        qr_codes_info += f'{qr_code.type}: {qr_code_data}, {qr_code_center}, {angle:.2f} | '
+                        cv2.putText(gray, qr_code_data, (qr_code_rect[0], qr_code_rect[1]-10), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 0, 0), 5)
+                        cv2.namedWindow("QR Code Detector", cv2.WINDOW_NORMAL)
+                        cv2.resizeWindow("QR Code Detector", 1080,1080)
+                        
+                        cv2.imshow("QR Code Detector", gray)
                 logging.info(f'{qr_codes_info}{datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")}')
 
         # Release the capture object
@@ -88,11 +88,8 @@ class QRCodeDetector_time:
         self.k4a.start()
 
     def detect_qr_codes_avg(self):
-        thresh_values = [51,53,55,57,59,61,63,65,67,69,71,73,75,77,79,
-                         81,83,85,87,89,91,93,95,97,99,101,103,105,107,109,111,113,115,117,119,121,123,125,127,129,131,133,135,137,
-                         139,141,143,145,147,149,151,153,155,157,159,161,163,165,167,169,171,173,175,177,179,181,183,185,187,189,191,
-                         193,195,197,199,201,203,205,207,209,211,213,215,217,219,221,223,225,227,229,231,233,235,237,239,241,243,245,
-                         247,249,251,253,255]
+        #thresh_values from 50 to 255
+        thresh_values = np.arange(50, 256, 10)
         min_avg_time = float('inf')
         min_std_time = float('inf')
         best_thresh = None
@@ -185,14 +182,15 @@ class QRCodeDetector_check():
         attempts = 0
         while len(qr_codes) < self.num_qr_codes:
             frame = self.k4a.get_capture()
-            grey = cv2.cvtColor(frame.color, cv2.COLOR_BGR2GRAY)
+            gray = cv2.cvtColor(frame.color, cv2.COLOR_BGR2GRAY)
             if frame is not None:
                 color_image = frame.color
-                decoded_objects = decode(grey)
+                _, thresh = cv2.threshold(gray, 120, 255, cv2.THRESH_TRUNC) 
+                decoded_objects = pyzbar.decode(thresh)
                 for obj in decoded_objects:
                     qr_codes[obj.data.decode('utf-8')] = obj.type
             attempts += 1
-            if attempts >= 100:
+            if attempts >= 1000:
                 raise Exception(f"Failed to find {self.num_qr_codes} different QR codes after {attempts} attempts")
         
         with open('objects.txt', 'w') as f:

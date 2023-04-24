@@ -91,7 +91,7 @@ class GUI_Azure_Kinect(QWidget):
             self.calibrate_button.setEnabled(False)
             
             #run the detection
-            qrcode_detector = QRCodeDetector(num_qr_codes=self.num_obj,t = self.thresh, config=self.camera_config)
+            qrcode_detector = QRCodeDetector(num_qr_codes=self.num_obj,t = self.thresh, config=self.camera_config, display=self.checkbox.isChecked())
             while self.active:
                 qrcode_detector.detect_qr_codes()
             #disable calibration button
