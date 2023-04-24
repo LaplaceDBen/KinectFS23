@@ -7,6 +7,7 @@ import pyk4a
 from pyk4a import Config, PyK4A
 import logging
 from datetime import datetime
+import time
 
 
 class QRCodeDetector_old:
@@ -95,11 +96,12 @@ class QRCodeDetector_old:
 
 
 class QRCodeDetector:
-    def __init__(self, num_qr_codes, config):
+    def __init__(self, num_qr_codes, t, config):
         self.num_qr_codes = num_qr_codes
 
         # Set up logging
         logging.basicConfig(filename='qr_codes.log', level=logging.INFO, format='%(message)s')
+        self.threashold = t
 
         # Initialize PyK4A
         self.k4a = config
@@ -112,7 +114,7 @@ class QRCodeDetector:
         if capture.color is not None:
             # Convert the color image to grayscale for QR code detection
             gray = cv2.cvtColor(capture.color, cv2.COLOR_BGR2GRAY)
-            _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+            _, thresh = cv2.threshold(gray, self.threashold, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
             
 
             
@@ -154,3 +156,53 @@ class QRCodeDetector:
     def stop(self):
         # Stop the camera capture
         self.k4a.stop()
+
+
+class QRCodeDetector_time:
+    def __init__(self, num_qr_codes):
+        self.num_qr_codes = num_qr_codes
+        # Initialize PyK4A
+        self.k4a = camera_config
+                
+        self.k4a.start()
+
+    def detect_qr_codes_avg(self):
+        thresh_values = [100,110,120,130,140,150,160,170,180,190,200,210,220,230,240,250]
+        min_avg_time = float('inf')
+        min_std_time = float('inf')
+        best_thresh = None
+        for j in thresh_values:
+            print(j)
+            times = []
+            for i in range(25):
+                start_time = time.time()
+                detected_qr_codes = 0
+                while detected_qr_codes < 5:
+                    # Capture a frame from the camera
+                    capture = self.k4a.get_capture()
+                    if capture.color is not None:
+                        # Convert the color image to grayscale for QR code detection
+                        gray = cv2.cvtColor(capture.color, cv2.COLOR_BGR2GRAY)
+                        _, thresh = cv2.threshold(gray, j, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+                        
+                        wait = cv2.waitKey(1)
+                        # Detect QR codes in the grayscale image
+                        qr_codes = pyzbar.decode(thresh)
+                        detected_qr_codes += len(qr_codes)
+                    if time.time() - start_time > 5:
+                        break
+                end_time = time.time()
+                times.append(end_time - start_time)
+            avg_time = np.mean(times)
+            std_time = np.std(times)
+            print(f'avg_time: {avg_time:.4f} sec, std: {std_time:.4f} sec')
+            
+            if avg_time < min_avg_time:
+                min_avg_time = avg_time
+                min_std_time = std_time
+                best_thresh = j
+        self.k4a.stop()
+        return best_thresh
+
+
+

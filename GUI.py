@@ -1,7 +1,7 @@
 import sys
 import os
 import datetime
-from detection_func import QRCodeDetector
+from detection_func import QRCodeDetector,QRCodeDetector_time
 from PySide6.QtCore import QFile
 from PySide6.QtGui import QIcon, QFont
 from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QTextEdit,QPushButton, QScrollArea, QInputDialog,QMessageBox,QCheckBox,QComboBox,QDialog,QDialogButtonBox,QFormLayout,QLabel,QLineEdit,QSpinBox,QVBoxLayout
@@ -24,6 +24,7 @@ class GUI_Azure_Kinect(QWidget):
         self.active=True
         self.num_obj = None
         self.detector = None
+        self.thresh = None
         self.camera_config = camera_config
 
         self.setWindowTitle('GUI_Azure_Kinect')
@@ -89,7 +90,7 @@ class GUI_Azure_Kinect(QWidget):
             self.calibrate_button.setEnabled(False)
             
             #run the detection
-            qrcode_detector = QRCodeDetector(num_qr_codes=self.num_obj,config=self.camera_config)
+            qrcode_detector = QRCodeDetector(num_qr_codes=self.num_obj,t = self.thresh, config=self.camera_config)
             while self.active:
                 qrcode_detector.detect_qr_codes()
             #disable calibration button
@@ -107,7 +108,15 @@ class GUI_Azure_Kinect(QWidget):
             if ok:
                 
                 self.log_window.append(f"{current_time} - Calibration is started")
+                
+                
+
+
                 self.log_window.append(f"{current_time} - Number of objects: {self.num_obj}")
+                self.log_window.append("wait for Threashold calibration to finish...")
+                qr_detector_avg = QRCodeDetector_time(self.num_obj)
+                self.thresh  = qr_detector_avg.detect_qr_codes_avg()
+                self.log_window.append(f"{current_time} - Best Threshold found: {self.thresh}")
                 
                 #mean,std= calibration_info(num_codes=self.num_obj,num_runs=10)
                 #self.log_window.append(f"{current_time} - Estimated detection time: {mean:.2f} s , standard deviation: {std:.2f} s")
@@ -168,9 +177,8 @@ class GUI_Azure_Kinect(QWidget):
             # show dialog and wait for result
             result = dialog.exec()
             
-            resolutions = {"720P": pyk4a.ColorResolution.RES_720P,
-               "1080P": pyk4a.ColorResolution.RES_1080P,
-               "2160P": pyk4a.ColorResolution.RES_2160P}
+            resolutions = {"2160P": pyk4a.ColorResolution.RES_2160P,
+               "1080P": pyk4a.ColorResolution.RES_1080P,"720P": pyk4a.ColorResolution.RES_720P}
             
             
 
