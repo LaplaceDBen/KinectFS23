@@ -2,7 +2,7 @@ import time
 import os
 import re
 
-logPath = r"C:\Users\rapha\OneDrive\Desktop\CDS_FS23\Projektarbeit\GitHub\KinectFS23\raffi\qr_codes_test.log"
+logPath = r"C:\Users\rapha\OneDrive\Desktop\CDS_FS23\Projektarbeit\GitHubNew\KinectFS23\raffi\qr_codes_test.log"
 
 def follow(path):
     with open(path, "r", encoding="utf8") as file:

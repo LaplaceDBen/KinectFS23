@@ -5,7 +5,7 @@ import bpy
 import math
 import time
 
-logPath = r"C:\Users\rapha\OneDrive\Desktop\CDS_FS23\Projektarbeit\GitHub\KinectFS23\raffi\qr_codes_test.log"
+logPath = r"C:\Users\rapha\OneDrive\Desktop\CDS_FS23\Projektarbeit\GitHubNew\KinectFS23\raffi\qr_codes_test.log"
 house_A_object_name = "House"
 house_B_object_name = "Modern House"
 house_C_object_name = "Appartment Building"
@@ -19,7 +19,7 @@ def follow(path):
             line = file.readline()
             # print(line)
             if not line:
-                time.sleep(0.1)
+                time.sleep(0.01)
                 continue
             yield line
 
@@ -54,3 +54,4 @@ for line in follow(logPath):
 
         bpy.context.view_layer.update()
         bpy.ops.wm.redraw_timer(type='DRAW_WIN_SWAP', iterations=1)
+        

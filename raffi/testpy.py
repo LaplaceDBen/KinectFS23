@@ -145,3 +145,4 @@ if obj:
         bpy.ops.wm.redraw_timer(type='DRAW_WIN_SWAP', iterations=1)
 else:
     print("Objekt nicht gefunden: " + object_name)
+    
