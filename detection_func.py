@@ -8,8 +8,10 @@ from pyk4a import Config, PyK4A
 import logging
 from datetime import datetime
 import time
+import random
 import matplotlib.pyplot as plt
-
+from tqdm import tqdm_gui
+from config import camera_config
 
 
 
@@ -53,21 +55,39 @@ class QRCodeDetector:
                     #center of qr code
                     qr_code_center = (qr_code_rect[0] + qr_code_rect[2] // 2, qr_code_rect[1] + qr_code_rect[3] // 2)
                     qr_code_polygon = qr_code.polygon
-
+                    orientation = qr_code.orientation
+                    if orientation == 'DOWN':
+                        side = 0
+                    elif orientation == 'LEFT':
+                        side = 90
+                    elif orientation == 'RIGHT':
+                        side = 180
+                    elif orientation == 'UP':
+                        side = 270
                     # Calculate orientation angle using QR code polygon
                     x1, y1 = qr_code_polygon[0]
                     x2, y2 = qr_code_polygon[1]
                     x3, y3 = qr_code_polygon[2]
                     x4, y4 = qr_code_polygon[3]
-                    angle = np.rad2deg(np.arctan2(y2-y1, x2-x1))
+                    angle = np.rad2deg(np.arctan2(y2-y1, x2-x1)) + side
                     if self.display:
-                        qr_codes_info += f'{qr_code.type}: {qr_code_data}, {qr_code_center}, {angle:.2f} | '
+                        
                         cv2.putText(gray, qr_code_data, (qr_code_rect[0], qr_code_rect[1]-10), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 0, 0), 5)
                         cv2.namedWindow("QR Code Detector", cv2.WINDOW_NORMAL)
                         cv2.resizeWindow("QR Code Detector", 1080,1080)
                         
                         cv2.imshow("QR Code Detector", gray)
+                        qr_codes_info += f'{qr_code.type}: {qr_code_data}, {qr_code_center}, {angle:.2f} | '
+                    else:
+                        qr_codes_info += f'{qr_code.type}: {qr_code_data}, {qr_code_center}, {angle:.2f} | '
                 logging.info(f'{qr_codes_info}{datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")}')
+
+        # Release the capture object
+        del capture
+
+    def stop(self):
+        # Stop the camera capture
+        self.k4a.stop()
 
         # Release the capture object
         del capture
@@ -89,46 +109,49 @@ class QRCodeDetector_time:
 
     def detect_qr_codes_avg(self):
         #thresh_values from 50 to 255
-        thresh_values = np.arange(50, 256, 1)
+        thresh_values = np.arange(122, 130, 1)
         min_avg_time = float('inf')
         min_std_time = float('inf')
         best_thresh = None
         avg_times = []
         std_times = []
-        for j in thresh_values:
-            print(j)
-            times = []
-            for i in range(10):
-                start_time = time.time()
-                detected_qr_codes = 0
-                while detected_qr_codes < self.num_qr_codes:
-                    # Capture a frame from the camera
-                    capture = self.k4a.get_capture()
-                    if capture.color is not None:
-                        # Convert the color image to grayscale for QR code detection
-                        gray = cv2.cvtColor(capture.color, cv2.COLOR_BGR2GRAY)
-                        _, thresh = cv2.threshold(gray, j, 255, cv2.THRESH_TRUNC) 
-                        #if a pixel value in the source image is greater than the threshold value, it is set to the threshold value. Otherwise, it remains unchanged.
-                        #_, thresh = cv2.threshold(gray, j, 255,cv2.THRESH_BINARY | cv2.THRESH_OTSU)
-                        #Otsu’s binarization method is used to automatically determine an optimal threshold value based on the image histogram. Then, THRESH_BINARY is applied using this optimal threshold value. 
-                        #This means that if a pixel value in the source image is greater than the threshold value, it is set to the maximum value (in this case 255). 
-                        # Otherwise, it is set to 0.
-                        
-                        wait = cv2.waitKey(1)
-                        # Detect QR codes in the grayscale image
-                        qr_codes = pyzbar.decode(thresh)
-                        detected_qr_codes += len(qr_codes)
-                    if time.time() - start_time > 1:
-                        break
-                end_time = time.time()
-                times.append(end_time - start_time)
-            avg_time = np.mean(times)
-            std_time = np.std(times)
-            avg_times.append(avg_time)
-            std_times.append(std_time)
-            
-            
-            print(f'avg_time: {avg_time:.4f} sec,std: {std_time:.4f} sec')
+        with tqdm_gui(total=len(thresh_values), desc="Progress",leave=True) as pbar:
+            for j in thresh_values:
+                print(j)
+                times = []
+                for i in range(10):
+                    start_time = time.time()
+                    detected_qr_codes = 0
+                    while detected_qr_codes < self.num_qr_codes:
+                        # Capture a frame from the camera
+                        capture = self.k4a.get_capture()
+                        if capture.color is not None:
+                            # Convert the color image to grayscale for QR code detection
+                            gray = cv2.cvtColor(capture.color, cv2.COLOR_BGR2GRAY)
+                            _, thresh = cv2.threshold(gray, j, 255, cv2.THRESH_TRUNC) 
+
+                            #if a pixel value in the source image is greater than the threshold value, it is set to the threshold value. Otherwise, it remains unchanged.
+                            #_, thresh = cv2.threshold(gray, j, 255,cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+                            #Otsu’s binarization method is used to automatically determine an optimal threshold value based on the image histogram. Then, THRESH_BINARY is applied using this optimal threshold value. 
+                            #This means that if a pixel value in the source image is greater than the threshold value, it is set to the maximum value (in this case 255). 
+                            # Otherwise, it is set to 0.
+                            
+                            wait = cv2.waitKey(1)
+                            # Detect QR codes in the grayscale image
+                            qr_codes = pyzbar.decode(thresh)
+                            detected_qr_codes += len(qr_codes)
+                        if time.time() - start_time > 1:
+                            break
+                    end_time = time.time()
+                    times.append(end_time - start_time)
+                avg_time = np.mean(times)
+                std_time = np.std(times)
+                avg_times.append(avg_time)
+                std_times.append(std_time)
+                pbar.update(1)
+                
+                
+                print(f'avg_time: {avg_time:.4f} sec,std: {std_time:.4f} sec')
             
             if avg_time < min_avg_time:
                 min_avg_time = avg_time
@@ -136,6 +159,9 @@ class QRCodeDetector_time:
                 best_thresh = j
         
         
+        pbar.close()
+        #force to close the progress bar
+        plt.close()
         minus_one_std = [avg_time - std_time for avg_time in avg_times]
         plus_one_std = [avg_time + std_time for avg_time in avg_times]
         plt.plot(thresh_values, avg_times, color='red',  linestyle='solid', linewidth=2, markersize=8)
@@ -190,7 +216,14 @@ class QRCodeDetector_check():
                 for obj in decoded_objects:
                     qr_codes[obj.data.decode('utf-8')] = obj.type
             attempts += 1
-            if attempts >= 250:
+            if attempts >= 100:
+                color_image = frame.color
+                _, thresh = cv2.threshold(gray, random.randint(50, 255), 255, cv2.THRESH_TRUNC) 
+                decoded_objects = pyzbar.decode(thresh)
+                for obj in decoded_objects:
+                    qr_codes[obj.data.decode('utf-8')] = obj.type
+            attempts += 1
+            if attempts >= 1000:
                 raise Exception(f"Failed to find {self.num_qr_codes} different QR codes after {attempts} attempts")
         
         with open('objects.txt', 'w') as f:
@@ -199,3 +232,4 @@ class QRCodeDetector_check():
         
         self.k4a.stop()
         return attempts, len(qr_codes)
+

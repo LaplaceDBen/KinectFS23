@@ -17,6 +17,7 @@ from pyk4a import Config, PyK4A
 
 
 
+
 #help by chatgpt
 class GUI_Azure_Kinect(QWidget):
 
@@ -128,7 +129,7 @@ class GUI_Azure_Kinect(QWidget):
                 self.thresh, avg_time ,std_time   = qr_detector_avg.detect_qr_codes_avg()
                 current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
                 self.log_window.append(f"{current_time} - Best Threshold found: {self.thresh}, Average detection time: {avg_time:.5f} s , standard deviation: {std_time:.5f}")
-                
+
                 #self.log_window.append("wait for Threashold calibration to finish...")
                 
                 #mean,std= calibration_info(num_codes=self.num_obj,num_runs=10)
@@ -170,7 +171,7 @@ class GUI_Azure_Kinect(QWidget):
             # create dropdowns
             label = QLabel('Resolution')
             dropdown1 = QComboBox()
-            dropdown1.addItems(['2160P', '1080P','720P'])
+            dropdown1.addItems(['720P', '1080P', '2160P'])
             layout.addRow(label, dropdown1)
 
             label = QLabel('Synchronized images only')
@@ -209,7 +210,7 @@ class GUI_Azure_Kinect(QWidget):
                              synchronized_images_only=syn,))
 
 
-   
+
 
 
 if __name__ == '__main__':
