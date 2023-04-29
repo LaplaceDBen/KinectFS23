@@ -109,7 +109,7 @@ class QRCodeDetector_time:
 
     def detect_qr_codes_avg(self):
         #thresh_values from 50 to 255
-        thresh_values = np.arange(122, 130, 1)
+        thresh_values = np.arange(50, 255, 1), 130, 1)
         min_avg_time = float('inf')
         min_std_time = float('inf')
         best_thresh = None
