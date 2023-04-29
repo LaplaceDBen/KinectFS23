@@ -46,7 +46,7 @@ class QRCodeDetector:
             # Check if the required number of QR codes has been found
             
             print(len(qr_codes))
-            if len(qr_codes) >= self.num_qr_codes:
+            if len(qr_codes) == self.num_qr_codes:
                 # Write the QR code information to the log file
                 qr_codes_info = ''
                 for qr_code in qr_codes:
@@ -70,16 +70,15 @@ class QRCodeDetector:
                     x3, y3 = qr_code_polygon[2]
                     x4, y4 = qr_code_polygon[3]
                     angle = np.rad2deg(np.arctan2(y2-y1, x2-x1)) + side
+                
                     if self.display:
                         
                         cv2.putText(gray, qr_code_data, (qr_code_rect[0], qr_code_rect[1]-10), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 0, 0), 5)
                         cv2.namedWindow("QR Code Detector", cv2.WINDOW_NORMAL)
                         cv2.resizeWindow("QR Code Detector", 1080,1080)
                         
-                        cv2.imshow("QR Code Detector", gray)
-                        qr_codes_info += f'{qr_code.type}: {qr_code_data}, {qr_code_center}, {angle:.2f} | '
-                    else:
-                        qr_codes_info += f'{qr_code.type}: {qr_code_data}, {qr_code_center}, {angle:.2f} | '
+                        cv2.imshow("QR Code Detector", gray)      
+                qr_codes_info += f'{qr_code.type}: {qr_code_data}, {qr_code_center}, {angle:.2f} | '
                 logging.info(f'{qr_codes_info}{datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")}')
 
         # Release the capture object
@@ -109,7 +108,7 @@ class QRCodeDetector_time:
 
     def detect_qr_codes_avg(self):
         #thresh_values from 50 to 255
-        thresh_values = np.arange(50, 255, 1)
+        thresh_values = np.arange(120, 125, 1)
         min_avg_time = float('inf')
         min_std_time = float('inf')
         best_thresh = None
