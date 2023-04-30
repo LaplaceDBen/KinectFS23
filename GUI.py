@@ -12,6 +12,7 @@ import threading
 from config import camera_config
 import pyk4a
 from pyk4a import Config, PyK4A
+import subprocess
 
 
 
@@ -23,6 +24,7 @@ class GUI_Azure_Kinect(QWidget):
 
     def __init__(self):
         super().__init__()
+        
         self.active=True
         self.num_obj = None
         self.detector = None
@@ -94,6 +96,7 @@ class GUI_Azure_Kinect(QWidget):
             while self.active:
                 qrcode_detector.detect_qr_codes()
             #disable calibration button
+            del qrcode_detector
             
             
         
@@ -147,7 +150,7 @@ class GUI_Azure_Kinect(QWidget):
 
     def stop(self):
         self.active=False
-        QRCodeDetector.stop()
+        QRCodeDetector.stop(self)
         self.config_button.setEnabled(True)
         current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
         self.log_window.append(f"{current_time} - Programm is stopped")
@@ -156,6 +159,7 @@ class GUI_Azure_Kinect(QWidget):
         #enable calibration button
         self.calibrate_button.setEnabled(True)
         #if detector is running
+        
 
            
 

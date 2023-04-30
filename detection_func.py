@@ -37,9 +37,8 @@ class QRCodeDetector:
         # Capture a frame from the camera
         capture = self.k4a.get_capture()
         if capture.color is not None:
-            # Convert the color image to grayscale for QR code detection
+            
             gray = cv2.cvtColor(capture.color, cv2.COLOR_BGR2GRAY)
-            #_, thresh = cv2.threshold(gray, self.threashold, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)slower filter
             _, thresh = cv2.threshold(gray, self.threashold, 255, cv2.THRESH_TRUNC)
             thresh2 = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 21, 2)
 
@@ -51,15 +50,12 @@ class QRCodeDetector:
                 # Submit tasks to the pool for parallel execution
                 qr_codes1 = executor.submit(pyzbar.decode, thresh)
                 qr_codes2 = executor.submit(pyzbar.decode, thresh2)
+                
 
             # Retrieve the results from the executed tasks
             qr_codes1 = qr_codes1.result()
             qr_codes2 = qr_codes2.result()
-            for qr in [qr_codes1, qr_codes2]:
-                if len(qr) == self.num_qr_codes:
-                    qr_codes = qr   
-                else:
-                    qr_codes = qr_codes1
+            qr_codes = qr_codes1 if len(qr_codes1) == self.num_qr_codes else qr_codes2
             # Check if the required number of QR codes has been found
             
             print("QR codes with trunc: ", len(qr_codes))
@@ -83,16 +79,23 @@ class QRCodeDetector:
                     x4, y4 = qr_code_polygon[3]
                     angle = np.rad2deg(np.arctan2(y2-y1, x2-x1)) + side
                 
-                    qr_codes_info += f'{qr_code.type}: {qr_code_data}, {qr_code_center}, {angle:.2f} | '
+                    qr_codes_info = ' | '.join([f'{qr_code.type}: {qr_code.data.decode()}, {((qr_code.rect[0] + qr_code.rect[2]) // 2, (qr_code.rect[1] + qr_code.rect[3]) // 2)}, {angle:.2f}' for qr_code in qr_codes])
+
                 logging.info(f'{qr_codes_info}{datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")}')
 
         # Release the capture object
         del capture
+        del gray
+        del thresh
+        del thresh2
+        del qr_codes1
 
-
+    @staticmethod
     def stop(self):
         # Stop the camera capture
         self.k4a.stop(self)
+        # Release the camera
+
 
 
 
@@ -107,7 +110,7 @@ class QRCodeDetector_time:
 
     def detect_qr_codes_avg(self):
         #thresh_values from 50 to 255
-        thresh_values = np.arange(122, 123, 1)
+        thresh_values = np.arange(95, 215, 1)
         min_avg_time = float('inf')
         min_std_time = float('inf')
         best_thresh = None
