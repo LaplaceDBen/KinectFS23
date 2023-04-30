@@ -12,7 +12,7 @@ import random
 import matplotlib.pyplot as plt
 from tqdm import tqdm_gui
 from config import camera_config
-
+import random
 
 
 class QRCodeDetector:
@@ -78,7 +78,7 @@ class QRCodeDetector:
                         cv2.resizeWindow("QR Code Detector", 1080,1080)
                         
                         cv2.imshow("QR Code Detector", gray)      
-                qr_codes_info += f'{qr_code.type}: {qr_code_data}, {qr_code_center}, {angle:.2f} | '
+                    qr_codes_info += f'{qr_code.type}: {qr_code_data}, {qr_code_center}, {angle:.2f} | '
                 logging.info(f'{qr_codes_info}{datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")}')
 
         # Release the capture object
@@ -108,7 +108,7 @@ class QRCodeDetector_time:
 
     def detect_qr_codes_avg(self):
         #thresh_values from 50 to 255
-        thresh_values = np.arange(120, 125, 1)
+        thresh_values = np.arange(0, 255, 1)
         min_avg_time = float('inf')
         min_std_time = float('inf')
         best_thresh = None
@@ -193,7 +193,87 @@ class QRCodeDetector_time:
         return best_thresh,  min_avg_time, min_std_time
 
 
+class QRCodeDetector_time_adaptive:
+    def __init__(self, num_qr_codes):
+        self.num_qr_codes = num_qr_codes
+        # Initialize PyK4A
+        self.k4a = camera_config
+                
+        self.k4a.start()
 
+    def detect_qr_codes_avg(self):
+        #thresh_values from 50 to 255
+        block_sizes = np.arange(85, 305, 4)
+        trunc_values = np.arange(50, 255, 4)
+        min_avg_time = float('inf')
+        min_std_time = float('inf')
+        best_thresh = None
+        avg_times = []
+        std_times = []
+        with tqdm_gui(total=len(block_sizes), desc="Progress",leave=True) as pbar:
+            for j in block_sizes:
+                for k in trunc_values:
+                    times = []
+                    for i in range(1):
+                        start_time = time.time()
+                        detected_qr_codes = 0
+                        while detected_qr_codes < self.num_qr_codes:
+                            # Capture a frame from the camera
+                            capture = self.k4a.get_capture()
+                            if capture.color is not None:
+                                # Convert the color image to grayscale for QR code detection
+                                gray = cv2.cvtColor(capture.color, cv2.COLOR_BGR2GRAY)
+                                # Convert the color image to grayscale for QR code detection
+
+                                # Apply adaptive thresholding
+                                block_size = j  # Adjust the block size as per your needs
+                                trunc_value = k  # Adjust the constant as per your needs
+                                _, adaptive_thresh = cv2.threshold(gray, block_size, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY)
+                                _, thresh = cv2.threshold(adaptive_thresh, trunc_value, 255, cv2.THRESH_TRUNC)
+
+
+
+                                #if a pixel value in the source image is greater than the threshold value, it is set to the threshold value. Otherwise, it remains unchanged.
+                                #_, thresh = cv2.threshold(gray, j, 255,cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+                                #Otsu’s binarization method is used to automatically determine an optimal threshold value based on the image histogram. Then, THRESH_BINARY is applied using this optimal threshold value. 
+                                #This means that if a pixel value in the source image is greater than the threshold value, it is set to the maximum value (in this case 255). 
+                                # Otherwise, it is set to 0.
+                                
+                                wait = cv2.waitKey(1)
+                                # Detect QR codes in the grayscale image
+                                qr_codes = pyzbar.decode(thresh)
+                                detected_qr_codes += len(qr_codes)
+                            if time.time() - start_time > 0.3:
+                                print("Time out")
+                                break
+                            else:
+                                end_time = time.time()
+                                times.append(end_time - start_time)
+                                avg_time = np.mean(times)
+                                std_time = np.std(times)
+                                avg_times.append(avg_time)
+                                std_times.append(std_time)
+                
+                
+                
+                    print(f'avg_time: {avg_time:.4f} sec,std: {std_time:.4f} sec')
+                    print("Block Size: ", j, "trunc_thresh: ", k)
+                pbar.update(1)
+            
+            if avg_time < min_avg_time:
+                min_avg_time = avg_time
+                min_std_time = std_time
+                best_block = j
+                best_thresh = k
+        
+        
+        pbar.close()
+        #force to close the progress bar
+        plt.close()
+
+        self.k4a.stop()
+        
+        return best_thresh, best_block,  min_avg_time, min_std_time
 
 
 class QRCodeDetector_check():
@@ -231,4 +311,5 @@ class QRCodeDetector_check():
         
         self.k4a.stop()
         return attempts, len(qr_codes)
+
 
