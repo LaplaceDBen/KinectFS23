@@ -1,23 +1,32 @@
 QWidget {
     background-color: #f2f2f2;
 }
+
 QPushButton {
-    border: 1px solid #333333;
-    border-radius: 4px;
-    padding: 4px;
-    background-color: #f0f0f0;
+    border: none;
+    border-radius: 20px;
+    padding: 8px 16px;
+    background-color: #8f5922;
+    color: #ffffff;
     font-size: 14px;
     font-weight: bold;
 }
-QPushButton:hover {
-    background-color: #ffffff;
-}
-QTextEdit {
-    background-color: #ffffff;
-    border: 1px solid #333333;
-    border-radius: 4px;
-    font-size: 10px;
-    font-family: Courier;
-    padding: 4px;
+
+QPushButton:disabled {
+    background-color: #cac6c6;
 }
 
+QPushButton:hover {
+    background-color: #c8b190;
+}
+
+QTextEdit#logWindow {
+    background-color: #ffffff;
+    border: 1px solid #d9d9d9;
+    border-radius: 4px;
+    font-size: 12px;
+    font-family: Courier;
+    padding: 8px;
+    margin-top: 16px;
+    color: #333333;
+}
