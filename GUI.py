@@ -96,6 +96,7 @@ class GUI_Azure_Kinect(QWidget):
             while self.active:
                 qrcode_detector.detect_qr_codes()
             #disable calibration button
+            qrcode_detector.stop()
             del qrcode_detector
             
             
@@ -150,7 +151,6 @@ class GUI_Azure_Kinect(QWidget):
 
     def stop(self):
         self.active=False
-        QRCodeDetector.stop(self)
         self.config_button.setEnabled(True)
         current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
         self.log_window.append(f"{current_time} - Programm is stopped")

@@ -90,11 +90,14 @@ class QRCodeDetector:
         del thresh2
         del qr_codes1
 
-    @staticmethod
+
     def stop(self):
         # Stop the camera capture
-        self.k4a.stop(self)
+        self.k4a.stop()
         # Release the camera
+        
+    def __del__(self):
+        self.k4a.stop()
 
 
 
@@ -110,7 +113,7 @@ class QRCodeDetector_time:
 
     def detect_qr_codes_avg(self):
         #thresh_values from 50 to 255
-        thresh_values = np.arange(95, 215, 1)
+        thresh_values = np.arange(213, 215, 1)
         min_avg_time = float('inf')
         min_std_time = float('inf')
         best_thresh = None
