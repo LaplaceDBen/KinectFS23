@@ -2,7 +2,7 @@ import sys
 import os
 import datetime
 import matplotlib.pyplot as plt
-from detection_func import QRCodeDetector,QRCodeDetector_time,QRCodeDetector_time_adaptive, QRCodeDetector_check
+from detection_func import QRCodeDetector,QRCodeDetector_time, QRCodeDetector_check
 from PySide6.QtCore import QFile
 from PySide6.QtGui import QIcon, QFont
 from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QTextEdit,QPushButton, QScrollArea, QInputDialog,QMessageBox,QCheckBox,QComboBox,QDialog,QDialogButtonBox,QFormLayout,QLabel,QLineEdit,QSpinBox,QVBoxLayout
@@ -49,8 +49,6 @@ class GUI_Azure_Kinect(QWidget):
         self.config_button = QPushButton('Config')
         self.config_button.clicked.connect(self.config)
         
-        self.checkbox = QCheckBox('Display QR codes')
-        self.checkbox.setChecked(True)
         #make space
         
 
@@ -69,7 +67,6 @@ class GUI_Azure_Kinect(QWidget):
         self.layout.addWidget(self.calibrate_button)
         self.layout.addWidget(self.stop_button)
         self.layout.addWidget(self.config_button)
-        self.layout.addWidget(self.checkbox)
         self.layout.addWidget(self.log_window)
 
 
@@ -92,7 +89,8 @@ class GUI_Azure_Kinect(QWidget):
             self.calibrate_button.setEnabled(False)
             
             #run the detection
-            qrcode_detector = QRCodeDetector(num_qr_codes=self.num_obj,t = self.thresh, config=self.camera_config, display=self.checkbox.isChecked())
+            qrcode_detector = QRCodeDetector(num_qr_codes=self.num_obj,t = self.thresh, config=self.camera_config)
+            print(self.thresh)
             while self.active:
                 qrcode_detector.detect_qr_codes()
             #disable calibration button
@@ -125,7 +123,7 @@ class GUI_Azure_Kinect(QWidget):
 
                 self.log_window.append(f"{current_time} - Number of objects: {self.num_obj}")
                 self.log_window.append("wait for Threashold calibration to finish...")
-                qr_detector_avg = QRCodeDetector_time(self.num_obj)
+                qr_detector_avg = QRCodeDetector_time(self.num_obj, self.camera_config)
                 self.thresh, avg_time ,std_time   = qr_detector_avg.detect_qr_codes_avg()
                 current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
                 self.log_window.append(f"{current_time} - Best Threshold found: {self.thresh}, Average detection time: {avg_time:.5f} s , standard deviation: {std_time:.5f}")
@@ -149,6 +147,7 @@ class GUI_Azure_Kinect(QWidget):
 
     def stop(self):
         self.active=False
+        QRCodeDetector.stop()
         self.config_button.setEnabled(True)
         current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
         self.log_window.append(f"{current_time} - Programm is stopped")

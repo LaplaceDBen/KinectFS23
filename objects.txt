@@ -1,5 +1,2 @@
-Haus_C: QRCODE
 Haus_D: QRCODE
-Haus_B: QRCODE
-Haus_A: QRCODE
 Baum: QRCODE
