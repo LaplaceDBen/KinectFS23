@@ -78,6 +78,10 @@ class QRCodeDetector:
                     x3, y3 = qr_code_polygon[2]
                     x4, y4 = qr_code_polygon[3]
                     angle = np.rad2deg(np.arctan2(y2-y1, x2-x1)) + side
+                    #cv2.putText(gray, qr_code_data, (qr_code_rect[0], qr_code_rect[1]-10), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 0, 0), 5)
+                    #cv2.namedWindow("QR Code Detector", cv2.WINDOW_NORMAL)
+                    #cv2.resizeWindow("QR Code Detector", 1080,1080)
+                    #cv2.imshow("QR Code Detector", thresh2)
                 
                     qr_codes_info = ' | '.join([f'{qr_code.type}: {qr_code.data.decode()}, {((qr_code.rect[0] + qr_code.rect[2]) // 2, (qr_code.rect[1] + qr_code.rect[3]) // 2)}, {angle:.2f}' for qr_code in qr_codes])
 
@@ -113,7 +117,7 @@ class QRCodeDetector_time:
 
     def detect_qr_codes_avg(self):
         #thresh_values from 50 to 255
-        thresh_values = np.arange(213, 215, 1)
+        thresh_values = np.arange(95, 115, 1)
         min_avg_time = float('inf')
         min_std_time = float('inf')
         best_thresh = None
