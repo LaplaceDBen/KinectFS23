@@ -3,6 +3,7 @@ import os
 import re
 import bpy
 import math
+import time
 
 logPath = r"C:\Users\rapha\OneDrive\Desktop\CDS_FS23\Projektarbeit\GitHubNew\KinectFS23\raffi\qr_codes_test.log"
 house_A_object_name = "House"
@@ -18,7 +19,7 @@ class OBJECT_OT_modal_operator(bpy.types.Operator):
     _timer = None
     
     def modal(self, context, event):
-        if event.type == 'Q':
+        if event.type in {'Q', 'LEFTMOUSE', 'ESC'}:
             return {'CANCELLED'}
         # Store the current line of the log file
         log_line = next(self.log_line_generator)

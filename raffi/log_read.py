@@ -6,7 +6,7 @@ def readFile(path):
         print(file.read())
 
 
-logPath = r"C:\Users\rapha\OneDrive\Desktop\CDS_FS23\Projektarbeit\GitHubNew\KinectFS23\raffi\qr_codes_test.log"
+logPath = r"raffi\qr_codes_test.log"
 # readFile(logPath)
 
 
