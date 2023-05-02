@@ -1,6 +1,7 @@
 import random
 import time
 from datetime import datetime
+import keyboard
 
 logPath = r"raffi\qr_codes_test.log"
 
@@ -24,6 +25,7 @@ for i in range(300):
 
     newLine = f"QRCODE: Baum, ({value7}, {value8}), {value9} | QRCODE: Haus_B, ({value4}, {value5}), {value6} | QRCODE: Haus_A, ({value1}, {value2}), {value3} | QRCODE: Haus_C, ({value10}, {value11}), {value12} | QRCODE: Haus_D, ({value13}, {value14}), {value15} | 16:49:57.222173\n"
     # newLine = f"QRCODE: Haus_A, ({value1}, {value2}), {value3} | 16:49:57.222173\n"
+    # newLine = f"QRCODE: Haus_B, ({value4}, {value5}), {value6} | 16:49:57.222173\n"
 
     with open(logPath, 'a') as f:
         f.write(newLine)
