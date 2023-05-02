@@ -83,7 +83,7 @@ class QRCodeDetector:
                     #cv2.resizeWindow("QR Code Detector", 1080,1080)
                     #cv2.imshow("QR Code Detector", thresh2)
                 
-                    qr_codes_info = ' | '.join([f'{qr_code.type}: {qr_code.data.decode()}, {((qr_code.rect[0] + qr_code.rect[2]) // 2, (qr_code.rect[1] + qr_code.rect[3]) // 2)}, {angle:.2f}' for qr_code in qr_codes])
+                    qr_codes_info = ' | '.join([f'{qr_code.type}: {qr_code.data.decode()}, {((qr_code.rect[0] + qr_code.rect[2]) // 2, (qr_code.rect[1] + qr_code.rect[3]) // 2)}, {angle:.2f}' for qr_code in qr_codes],'|')
 
                 logging.info(f'{qr_codes_info}{datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")}')
 
