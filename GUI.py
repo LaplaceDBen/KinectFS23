@@ -51,6 +51,10 @@ class GUI_Azure_Kinect(QWidget):
         self.config_button = QPushButton('Config')
         self.config_button.clicked.connect(self.config)
         
+        #add checkbox for fast calibration mode
+        self.fast_calibration = QCheckBox("Fast Calibration")
+    
+        
         #make space
         
 
@@ -66,10 +70,13 @@ class GUI_Azure_Kinect(QWidget):
         self.scroll_area.setWidget(self.log_window)
 
         self.layout.addWidget(self.start_button)
-        self.layout.addWidget(self.calibrate_button)
+        
         self.layout.addWidget(self.stop_button)
         self.layout.addWidget(self.config_button)
+        self.layout.addWidget(self.calibrate_button)
+        self.layout.addWidget(self.fast_calibration)
         self.layout.addWidget(self.log_window)
+        
 
 
 
