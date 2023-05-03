@@ -110,7 +110,6 @@ class GUI_Azure_Kinect(QWidget):
 
 
     def calibrate(self):
-        self.config_button.setEnabled(False)
         current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
         try:
             self.num_obj, ok = QInputDialog.getInt(self, "Calibration", "Enter the number of objects:", 1, 1)
@@ -138,6 +137,7 @@ class GUI_Azure_Kinect(QWidget):
             self.log_window.append(f"{current_time} - Is the number of objects correct?")
             self.log_window.append(f"{current_time} - Is the camera connected?")
             self.log_window.append(f"{current_time} - Try a higher resolution or a lower number of objects")
+            
             
 
     def stop(self):
