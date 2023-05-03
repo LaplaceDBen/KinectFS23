@@ -118,16 +118,7 @@ class GUI_Azure_Kinect(QWidget):
             if ok:
                 current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
                 self.log_window.append(f"{current_time} - Calibration is started")
-                
-                try:
-                    current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
-                    #attempts, detected_codes = QRCodeDetector_check(self.num_obj).detect_qr_codes()
-                    current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
-                    #self.log_window.append(f"{current_time} - Needed {attempts} attempts to find {self.num_obj} objects")
-                    
-                except:
-                    current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
-                    self.log_window.append(f"{current_time} - Calibration is not possible- Failed to find {self.num_obj} objects")
+
                 
 
 
