@@ -4,7 +4,7 @@ from pyzbar.pyzbar import decode
 from pyzbar import pyzbar
 from config import camera_config
 import pyk4a
-from pyk4a import Config, PyK4A
+from pyk4a import Config, PyK4A, ColorControlCommand, ColorControlMode
 import logging
 from datetime import datetime
 import time
@@ -35,65 +35,74 @@ class QRCodeDetector:
 
     def detect_qr_codes(self):
         # Capture a frame from the camera
-        capture = self.k4a.get_capture()
-        if capture.color is not None:
-            
-            gray = cv2.cvtColor(capture.color, cv2.COLOR_BGR2GRAY)
-            _, thresh = cv2.threshold(gray, self.threashold, 255, cv2.THRESH_TRUNC)
-            thresh2 = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 21, 2)
-
-            
-            wait = cv2.waitKey(1)
-            # Detect QR codes in the grayscale image
-            # Create a thread or process pool
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                # Submit tasks to the pool for parallel execution
-                qr_codes1 = executor.submit(pyzbar.decode, thresh)
-                qr_codes2 = executor.submit(pyzbar.decode, thresh2)
+        while True:
+            capture = self.k4a.get_capture()
+            if capture.color is not None:
                 
+                height, width, _ = capture.color.shape
 
-            # Retrieve the results from the executed tasks
-            qr_codes1 = qr_codes1.result()
-            qr_codes2 = qr_codes2.result()
-            qr_codes = qr_codes1 if len(qr_codes1) == self.num_qr_codes else qr_codes2
-            # Check if the required number of QR codes has been found
-            
-            print("QR codes with trunc: ", len(qr_codes))
-            print("QR codes with adaptive thresholding: ", len(qr_codes2))
-            if len(qr_codes) == self.num_qr_codes:
-                # Write the QR code information to the log file
-                qr_codes_info = ''
-                for qr_code in qr_codes:
-                    qr_code_data = qr_code.data.decode()
-                    qr_code_rect = qr_code.rect
-                    # Center of qr code
-                    qr_code_center = ((qr_code_rect[0] + qr_code_rect[2]) // 2, (qr_code_rect[1] + qr_code_rect[3]) // 2)
-                    qr_code_polygon = qr_code.polygon
-                    orientation = qr_code.orientation
+                # Calculate the number of pixels to be clipped on each side
+                clip_pixels = int(width * 0.25)
 
-                    side = {'DOWN': 0, 'LEFT': 90, 'RIGHT': 180, 'UP': 270}.get(orientation, 0)
-                    # Calculate orientation angle using QR code polygon
-                    x1, y1 = qr_code_polygon[0]
-                    x2, y2 = qr_code_polygon[1]
-                    x3, y3 = qr_code_polygon[2]
-                    x4, y4 = qr_code_polygon[3]
-                    # angle = np.rad2deg(np.arctan2(y2-y1, x2-x1)) + side
-                    angle = np.rad2deg(np.arctan2(np.abs(y2-y1), np.abs(x2-x1))) + side # <---- FIX?
-                    #cv2.putText(gray, qr_code_data, (qr_code_rect[0], qr_code_rect[1]-10), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 0, 0), 5)
-                    #cv2.namedWindow("QR Code Detector", cv2.WINDOW_NORMAL)
-                    #cv2.resizeWindow("QR Code Detector", 1080,1080)
-                    #cv2.imshow("QR Code Detector", thresh2)
+                # Perform cropping
+                cropped_image = capture.color[:, clip_pixels:-clip_pixels, :]
                 
-                    qr_codes_info = ' | '.join([f'{qr_code.type}: {qr_code.data.decode()}, {((qr_code.rect[0] + qr_code.rect[2]) // 2, (qr_code.rect[1] + qr_code.rect[3]) // 2)}, {angle:.2f}' for qr_code in qr_codes]) + ' | '
+                gray = cv2.cvtColor(cropped_image, cv2.COLOR_BGR2GRAY)
+                _, thresh = cv2.threshold(gray, self.threashold, 255, cv2.THRESH_TRUNC)
+                thresh2 = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 21, 2)
 
-                logging.info(f'{qr_codes_info}{datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")}')
+                
+                wait = cv2.waitKey(1) #necessary for the camera to work
+                # Detect QR codes in the grayscale image
+                # Create a thread or process pool
+                with concurrent.futures.ThreadPoolExecutor() as executor:
+                    # Submit tasks to the pool for parallel execution
+                    qr_codes1 = executor.submit(pyzbar.decode, thresh)
+                    qr_codes2 = executor.submit(pyzbar.decode, thresh2)
+                    
 
-        # Release the capture object
-        del capture
-        del gray
-        del thresh
-        del thresh2
-        del qr_codes1
+                # Retrieve the results from the executed tasks
+                qr_codes1 = qr_codes1.result()
+                qr_codes2 = qr_codes2.result()
+                qr_codes = qr_codes1 if len(qr_codes1) == self.num_qr_codes else qr_codes2
+                # Check if the required number of QR codes has been found
+                
+                print("QR codes with trunc: ", len(qr_codes))
+                print("QR codes with adaptive thresholding: ", len(qr_codes2))
+                if len(qr_codes) == self.num_qr_codes:
+                    # Write the QR code information to the log file
+                    qr_codes_info = ''
+                    for qr_code in qr_codes:
+                        qr_code_data = qr_code.data.decode()
+                        qr_code_rect = qr_code.rect
+                        # Center of qr code
+                        qr_code_center = ((qr_code_rect[0] + qr_code_rect[2]) // 2, (qr_code_rect[1] + qr_code_rect[3]) // 2)
+                        qr_code_polygon = qr_code.polygon
+                        orientation = qr_code.orientation
+
+                        side = {'DOWN': 0, 'LEFT': 90, 'RIGHT': 180, 'UP': 270}.get(orientation, 0)
+                        # Calculate orientation angle using QR code polygon
+                        x1, y1 = qr_code_polygon[0]
+                        x2, y2 = qr_code_polygon[1]
+                        x3, y3 = qr_code_polygon[2]
+                        x4, y4 = qr_code_polygon[3]
+                        # angle = np.rad2deg(np.arctan2(y2-y1, x2-x1)) + side
+                        angle = np.rad2deg(np.arctan2(np.abs(y2-y1), np.abs(x2-x1))) + side # <---- FIX?
+                        cv2.putText(gray, qr_code_data, (qr_code_rect[0], qr_code_rect[1]-10), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 0, 0), 5)
+                        cv2.namedWindow("QR Code Detector", cv2.WINDOW_NORMAL)
+                        cv2.resizeWindow("QR Code Detector", 1080,1080)
+                        cv2.imshow("QR Code Detector", thresh)
+                    
+                        qr_codes_info = ' | '.join([f'{qr_code.type}: {qr_code.data.decode()}, {((qr_code.rect[0] + qr_code.rect[2]) // 2, (qr_code.rect[1] + qr_code.rect[3]) // 2)}, {angle:.2f}' for qr_code in qr_codes]) + ' | '
+
+                    logging.info(f'{qr_codes_info}{datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")}')
+
+            # Release the capture object
+            del capture
+            del gray
+            del thresh
+            del thresh2
+            del qr_codes1
 
 
     def stop(self):
@@ -118,7 +127,7 @@ class QRCodeDetector_time:
 
     def detect_qr_codes_avg(self):
         #thresh_values from 75 to 255
-        thresh_values = np.arange(75, 215, 1)
+        thresh_values = np.arange(75, 95, 1)
         min_avg_time = float('inf')
         min_std_time = float('inf')
         best_thresh = None

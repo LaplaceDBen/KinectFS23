@@ -13,7 +13,7 @@ from config import camera_config
 import pyk4a
 from pyk4a import Config, PyK4A
 import subprocess
-
+import threading
 
 
 
@@ -91,13 +91,12 @@ class GUI_Azure_Kinect(QWidget):
             self.calibrate_button.setEnabled(False)
             
             #run the detection
-            qrcode_detector = QRCodeDetector(num_qr_codes=self.num_obj,t = self.thresh, config=self.camera_config)
+            self.qrcode_detector = QRCodeDetector(num_qr_codes=self.num_obj,t = self.thresh, config=self.camera_config)
             print(self.thresh)
-            while self.active:
-                qrcode_detector.detect_qr_codes()
+            
+            self.qrcode_detector.detect_qr_codes()
             #disable calibration button
-            qrcode_detector.stop()
-            del qrcode_detector
+
             
             
         
@@ -115,9 +114,9 @@ class GUI_Azure_Kinect(QWidget):
                 
                 try:
                     current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
-                    attempts, detected_codes = QRCodeDetector_check(self.num_obj).detect_qr_codes()
+                    #attempts, detected_codes = QRCodeDetector_check(self.num_obj).detect_qr_codes()
                     current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
-                    self.log_window.append(f"{current_time} - Needed {attempts} attempts to find {self.num_obj} objects")
+                    #self.log_window.append(f"{current_time} - Needed {attempts} attempts to find {self.num_obj} objects")
                     
                 except:
                     current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
@@ -158,6 +157,8 @@ class GUI_Azure_Kinect(QWidget):
         self.log_window.append(f"{current_time} - Calibration is reset")
         #enable calibration button
         self.calibrate_button.setEnabled(True)
+        self.qrcode_detector.stop()
+        del self.qrcode_detector
         #if detector is running
         
 

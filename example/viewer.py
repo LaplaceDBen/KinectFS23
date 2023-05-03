@@ -20,7 +20,10 @@ def main():
 
     count = 0
     while 1:
+        #clip 10% of outer edge of capture
         capture = k4a.get_capture()
+        
+        #capture = k4a.get_capture()
 
         if np.any(capture.color):
             cv2.imshow("k4a", capture.color)
