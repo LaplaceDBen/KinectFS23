@@ -36,6 +36,8 @@ class GUI_Azure_Kinect(QWidget):
         self.resize(800, 600)
 
         self.layout = QVBoxLayout(self)
+        #make window non resizable
+        self.setFixedSize(self.size())
 
         self.start_button = QPushButton('Start')
         self.start_button.clicked.connect(self.start)
@@ -96,13 +98,10 @@ class GUI_Azure_Kinect(QWidget):
         else:
             self.log_window.append(f"{current_time} - Programm is started - Number of objects: {self.num_obj}")
             self.calibrate_button.setEnabled(False)
-            
             #run the detection
             self.qrcode_detector = QRCodeDetector(num_qr_codes=self.num_obj,t = self.thresh, config=self.camera_config)
-            print(self.thresh)
-            
+            #print(self.thresh)
             self.qrcode_detector.detect_qr_codes()
-            #disable calibration button
 
             
             
@@ -118,10 +117,6 @@ class GUI_Azure_Kinect(QWidget):
             if ok:
                 current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
                 self.log_window.append(f"{current_time} - Calibration is started")
-
-                
-
-
                 self.log_window.append(f"{current_time} - Number of objects: {self.num_obj}")
                 self.log_window.append("wait for Threashold calibration to finish...")
                 fast_cal = self.fast_calibration.isChecked()
@@ -130,21 +125,19 @@ class GUI_Azure_Kinect(QWidget):
                 current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
                 self.log_window.append(f"{current_time} - Best Threshold found: {self.thresh}, Average detection time: {avg_time:.5f} s , standard deviation: {std_time:.5f}")
 
-                #self.log_window.append("wait for Threashold calibration to finish...")
-                
-                #mean,std= calibration_info(num_codes=self.num_obj,num_runs=10)
-                #self.log_window.append(f"{current_time} - Estimated detection time: {mean:.2f} s , standard deviation: {std:.2f} s")
-                
                 self.setWindowTitle(f"GUI_Azure_Kinect - {self.num_obj} objects")
                 
                 self.log_window.append(f"{current_time} - Calibration is done")
                 self.start_button.setEnabled(True)
                 self.stop_button.setEnabled(True)
+                self.config_button.setEnabled(True)
             else:
-                return 
-            
+                self.log_window.append(f"{current_time} - Calibration is canceled")
         except: 
             self.log_window.append(f"{current_time} - Calibration is not possible")
+            self.log_window.append(f"{current_time} - Is the number of objects correct?")
+            self.log_window.append(f"{current_time} - Is the camera connected?")
+            self.log_window.append(f"{current_time} - Try a higher resolution or a lower number of objects")
             
 
     def stop(self):
@@ -207,10 +200,22 @@ class GUI_Azure_Kinect(QWidget):
                 resolution = resolutions[res]
                 # print selected options
                 print(f'Resolution: {res}, synchronized: {syn}')
+                current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+                self.log_window.append(f"{current_time}")
+                self.log_window.append(f"Resolution: {res}, synchronized: {syn}")
+                self.log_window.append(f"Ready for calibration")
+                
                 
                 self.camera_config = PyK4A(Config(color_resolution=resolution,
                              depth_mode=pyk4a.DepthMode.NFOV_UNBINNED,
                              synchronized_images_only=syn,))
+                
+            else:
+                current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+                self.log_window.append(f"{current_time}")
+                self.log_window.append(f"Config is canceled")
+                self.log_window.append(f"Config is set to default")
+                self.log_window.append(f"Resolution: 720P, synchronized: True")
 
 
 
