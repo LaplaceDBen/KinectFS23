@@ -133,7 +133,8 @@ class GUI_Azure_Kinect(QWidget):
 
                 self.log_window.append(f"{current_time} - Number of objects: {self.num_obj}")
                 self.log_window.append("wait for Threashold calibration to finish...")
-                qr_detector_avg = QRCodeDetector_time(self.num_obj, self.camera_config)
+                fast_cal = self.fast_calibration.isChecked()
+                qr_detector_avg = QRCodeDetector_time(self.num_obj, self.camera_config, fast_calibration=fast_cal)
                 self.thresh, avg_time ,std_time   = qr_detector_avg.detect_qr_codes_avg()
                 current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
                 self.log_window.append(f"{current_time} - Best Threshold found: {self.thresh}, Average detection time: {avg_time:.5f} s , standard deviation: {std_time:.5f}")

@@ -118,16 +118,16 @@ class QRCodeDetector:
 
 
 class QRCodeDetector_time:
-    def __init__(self, num_qr_codes, config):
+    def __init__(self, num_qr_codes, config, fast_calibration=False):
         self.num_qr_codes = num_qr_codes
         # Initialize PyK4A
         self.k4a = config
-                
+        self.fast_calibration = fast_calibration  
         self.k4a.start()
 
     def detect_qr_codes_avg(self):
         #thresh_values from 75 to 255
-        thresh_values = np.arange(90, 100, 1)
+        thresh_values = np.arange(40, 220, 1)
         min_avg_time = float('inf')
         min_std_time = float('inf')
         best_thresh = None
@@ -187,6 +187,8 @@ class QRCodeDetector_time:
                     min_avg_time = avg_time
                     min_std_time = std_time
                     best_thresh = j
+                if self.fast_calibration == True and avg_time > min_avg_time + min_std_time:
+                    break
         
         
         pbar.close()
