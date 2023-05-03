@@ -86,8 +86,8 @@ class QRCodeDetector:
                         x2, y2 = qr_code_polygon[1]
                         x3, y3 = qr_code_polygon[2]
                         x4, y4 = qr_code_polygon[3]
-                        # angle = np.rad2deg(np.arctan2(y2-y1, x2-x1)) + side
-                        angle = np.rad2deg(np.arctan2(np.abs(y2-y1), np.abs(x2-x1))) + side # <---- FIX?
+                        angle = np.rad2deg(np.arctan2(y2-y1, x2-x1)) + side
+                        #angle = np.rad2deg(np.arctan2(np.abs(y2-y1), np.abs(x2-x1))) + side # <---- FIX?
                         cv2.putText(gray, qr_code_data, (qr_code_rect[0], qr_code_rect[1]-10), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 0, 0), 5)
                         cv2.namedWindow("QR Code Detector", cv2.WINDOW_NORMAL)
                         cv2.resizeWindow("QR Code Detector", 1080,1080)
@@ -127,7 +127,7 @@ class QRCodeDetector_time:
 
     def detect_qr_codes_avg(self):
         #thresh_values from 75 to 255
-        thresh_values = np.arange(75, 95, 1)
+        thresh_values = np.arange(90, 100, 1)
         min_avg_time = float('inf')
         min_std_time = float('inf')
         best_thresh = None
@@ -145,7 +145,17 @@ class QRCodeDetector_time:
                         capture = self.k4a.get_capture()
                         if capture.color is not None:
                             # Convert the color image to grayscale for QR code detection
-                            gray = cv2.cvtColor(capture.color, cv2.COLOR_BGR2GRAY)
+                            
+                            height, width, _ = capture.color.shape
+
+                            # Calculate the number of pixels to be clipped on each side
+                            clip_pixels = int(width * 0.25)
+
+                            # Perform cropping
+                            cropped_image = capture.color[:, clip_pixels:-clip_pixels, :]
+                
+                            gray = cv2.cvtColor(cropped_image, cv2.COLOR_BGR2GRAY)
+                            #gray = cv2.cvtColor(capture.color, cv2.COLOR_BGR2GRAY)
                             _, thresh = cv2.threshold(gray, j, 255, cv2.THRESH_TRUNC) 
                             #thresh = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 2)
                             
