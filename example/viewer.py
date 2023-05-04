@@ -9,7 +9,7 @@ from pyk4a import Config, PyK4A
 def main():
     k4a = PyK4A(
         Config(
-            color_resolution=pyk4a.ColorResolution.RES_2160P,
+            color_resolution=pyk4a.ColorResolution.RES_720P,
             depth_mode=pyk4a.DepthMode.NFOV_UNBINNED,
             synchronized_images_only=True,
         )
@@ -20,7 +20,10 @@ def main():
 
     count = 0
     while 1:
+        #clip 10% of outer edge of capture
         capture = k4a.get_capture()
+        
+        #capture = k4a.get_capture()
 
         if np.any(capture.color):
             cv2.imshow("k4a", capture.color)

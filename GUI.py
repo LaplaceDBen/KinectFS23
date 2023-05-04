@@ -2,7 +2,7 @@ import sys
 import os
 import datetime
 import matplotlib.pyplot as plt
-from detection_func import QRCodeDetector,QRCodeDetector_time, QRCodeDetector_check
+from detection_func import QRCodeDetector,QRCodeDetector_time
 from PySide6.QtCore import QFile
 from PySide6.QtGui import QIcon, QFont
 from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QTextEdit,QPushButton, QScrollArea, QInputDialog,QMessageBox,QCheckBox,QComboBox,QDialog,QDialogButtonBox,QFormLayout,QLabel,QLineEdit,QSpinBox,QVBoxLayout
@@ -13,7 +13,7 @@ from config import camera_config
 import pyk4a
 from pyk4a import Config, PyK4A
 import subprocess
-
+import threading
 
 
 
@@ -36,6 +36,8 @@ class GUI_Azure_Kinect(QWidget):
         self.resize(800, 600)
 
         self.layout = QVBoxLayout(self)
+        #make window non resizable
+        self.setFixedSize(self.size())
 
         self.start_button = QPushButton('Start')
         self.start_button.clicked.connect(self.start)
@@ -50,6 +52,10 @@ class GUI_Azure_Kinect(QWidget):
         
         self.config_button = QPushButton('Config')
         self.config_button.clicked.connect(self.config)
+        
+        #add checkbox for fast calibration mode
+        self.fast_calibration = QCheckBox("Fast Calibration")
+    
         
         #make space
         
@@ -66,10 +72,13 @@ class GUI_Azure_Kinect(QWidget):
         self.scroll_area.setWidget(self.log_window)
 
         self.layout.addWidget(self.start_button)
-        self.layout.addWidget(self.calibrate_button)
+        
         self.layout.addWidget(self.stop_button)
         self.layout.addWidget(self.config_button)
+        self.layout.addWidget(self.calibrate_button)
+        self.layout.addWidget(self.fast_calibration)
         self.layout.addWidget(self.log_window)
+        
 
 
 
@@ -89,15 +98,11 @@ class GUI_Azure_Kinect(QWidget):
         else:
             self.log_window.append(f"{current_time} - Programm is started - Number of objects: {self.num_obj}")
             self.calibrate_button.setEnabled(False)
-            
             #run the detection
-            qrcode_detector = QRCodeDetector(num_qr_codes=self.num_obj,t = self.thresh, config=self.camera_config)
-            print(self.thresh)
-            while self.active:
-                qrcode_detector.detect_qr_codes()
-            #disable calibration button
-            qrcode_detector.stop()
-            del qrcode_detector
+            self.qrcode_detector = QRCodeDetector(num_qr_codes=self.num_obj,t = self.thresh, config=self.camera_config)
+            #print(self.thresh)
+            self.qrcode_detector.detect_qr_codes()
+
             
             
         
@@ -105,48 +110,34 @@ class GUI_Azure_Kinect(QWidget):
 
 
     def calibrate(self):
-        self.config_button.setEnabled(False)
         current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
         try:
             self.num_obj, ok = QInputDialog.getInt(self, "Calibration", "Enter the number of objects:", 1, 1)
             if ok:
                 current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
                 self.log_window.append(f"{current_time} - Calibration is started")
-                
-                try:
-                    current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
-                    #attempts, detected_codes = QRCodeDetector_check(self.num_obj).detect_qr_codes()
-                    current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
-                    #self.log_window.append(f"{current_time} - Needed {attempts} attempts to find {self.num_obj} objects")
-                    
-                except:
-                    current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
-                    self.log_window.append(f"{current_time} - Calibration is not possible- Failed to find {self.num_obj} objects")
-                
-
-
                 self.log_window.append(f"{current_time} - Number of objects: {self.num_obj}")
                 self.log_window.append("wait for Threashold calibration to finish...")
-                qr_detector_avg = QRCodeDetector_time(self.num_obj, self.camera_config)
+                fast_cal = self.fast_calibration.isChecked()
+                qr_detector_avg = QRCodeDetector_time(self.num_obj, self.camera_config, fast_calibration=fast_cal)
                 self.thresh, avg_time ,std_time   = qr_detector_avg.detect_qr_codes_avg()
                 current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
                 self.log_window.append(f"{current_time} - Best Threshold found: {self.thresh}, Average detection time: {avg_time:.5f} s , standard deviation: {std_time:.5f}")
 
-                #self.log_window.append("wait for Threashold calibration to finish...")
-                
-                #mean,std= calibration_info(num_codes=self.num_obj,num_runs=10)
-                #self.log_window.append(f"{current_time} - Estimated detection time: {mean:.2f} s , standard deviation: {std:.2f} s")
-                
                 self.setWindowTitle(f"GUI_Azure_Kinect - {self.num_obj} objects")
                 
                 self.log_window.append(f"{current_time} - Calibration is done")
                 self.start_button.setEnabled(True)
                 self.stop_button.setEnabled(True)
+                self.config_button.setEnabled(True)
             else:
-                return 
-            
+                self.log_window.append(f"{current_time} - Calibration is canceled")
         except: 
             self.log_window.append(f"{current_time} - Calibration is not possible")
+            self.log_window.append(f"{current_time} - Is the number of objects correct?")
+            self.log_window.append(f"{current_time} - Is the camera connected?")
+            self.log_window.append(f"{current_time} - Try a higher resolution or a lower number of objects")
+            
             
 
     def stop(self):
@@ -158,6 +149,8 @@ class GUI_Azure_Kinect(QWidget):
         self.log_window.append(f"{current_time} - Calibration is reset")
         #enable calibration button
         self.calibrate_button.setEnabled(True)
+        self.qrcode_detector.stop()
+        del self.qrcode_detector
         #if detector is running
         
 
@@ -207,10 +200,22 @@ class GUI_Azure_Kinect(QWidget):
                 resolution = resolutions[res]
                 # print selected options
                 print(f'Resolution: {res}, synchronized: {syn}')
+                current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+                self.log_window.append(f"{current_time}")
+                self.log_window.append(f"Resolution: {res}, synchronized: {syn}")
+                self.log_window.append(f"Ready for calibration")
+                
                 
                 self.camera_config = PyK4A(Config(color_resolution=resolution,
                              depth_mode=pyk4a.DepthMode.NFOV_UNBINNED,
                              synchronized_images_only=syn,))
+                
+            else:
+                current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+                self.log_window.append(f"{current_time}")
+                self.log_window.append(f"Config is canceled")
+                self.log_window.append(f"Config is set to default")
+                self.log_window.append(f"Resolution: 720P, synchronized: True")
 
 
 

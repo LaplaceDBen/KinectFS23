@@ -1,148 +1,43 @@
-"""
-VSC Extension "Blender Development" von Jaques Lucke zuerst installieren
-Python-Umgebung von Blender in VSC auswählen --> CTRL+Shift+P --> Pyhton: Select Interpreter --> In den Blender Ordner
-pip install bpy
-"""
-
-import bpy
-import math
+import cv2
+import numpy as np
 import time
 
-object_name = "House"
-
-# Suche nach dem Objekt in der Szene
-obj = bpy.data.objects.get(object_name)
-
-if obj:
-    # Schleife 25 Mal
-    for i in range(25):
-        # Bewege das Objekt entlang der Y-Achse um 1 Einheit
-        obj.location.y += 1
-
-        # Drehe das Objekt um 5 Grad um die Z-Achse
-        obj.rotation_euler.z += math.radians(5)
-
-        # Aktualisiere das Objekt in Blender
-        bpy.context.view_layer.update()
-        print("Durchführung: ", i + 1)
-
-        # Warte 0,02 Sekunden
-        time.sleep(0.02)
-
-        # Erzwinge die Aktualisierung der Benutzeroberfläche
-        bpy.ops.wm.redraw_timer(type='DRAW_WIN_SWAP', iterations=1)
-else:
-    print("Objekt nicht gefunden: " + object_name)
-    
-    
-    
-if obj:
-    # Schleife x Mal
-    for i in range(60):
-        # Bewege das Objekt entlang der Y-Achse um 1 Einheit
-        obj.location.x -= 1
-
-        # Drehe das Objekt um x Grad um die Z-Achse
-        obj.rotation_euler.z += math.radians(5)
-
-        # Aktualisiere das Objekt in Blender
-        bpy.context.view_layer.update()
-        print("Durchführung: ", i + 1)
-
-        # Warte x Sekunden
-        time.sleep(0.02)
-
-        # Erzwinge die Aktualisierung der Benutzeroberfläche
-        bpy.ops.wm.redraw_timer(type='DRAW_WIN_SWAP', iterations=1)
-else:
-    print("Objekt nicht gefunden: " + object_name)
+import pyk4a
+from pyk4a import Config, PyK4A
 
 
-if obj:
-    # Schleife x Mal
-    for i in range(65):
-        # Bewege das Objekt entlang der Y-Achse um 1 Einheit
-        obj.location.y -= 1
+def main():
+    k4a = PyK4A(
+        Config(
+            color_resolution=pyk4a.ColorResolution.RES_720P,
+            depth_mode=pyk4a.DepthMode.NFOV_UNBINNED,
+            synchronized_images_only=True,
+        )
+    )
+    k4a.start()
 
-        # Drehe das Objekt um x Grad um die Z-Achse
-        obj.rotation_euler.z += math.radians(5)
+    count = 0
+    while True:
+        capture = k4a.get_capture()
 
-        # Aktualisiere das Objekt in Blender
-        bpy.context.view_layer.update()
-        print("Durchführung: ", i + 1)
+        if np.any(capture.color):
+            # Get the dimensions of the color image
+            height, width, _ = capture.color.shape
 
-        # Warte x Sekunden
-        time.sleep(0.02)
+            # Calculate the number of pixels to be clipped on each side
+            clip_pixels = int(width * 0.25)
 
-        # Erzwinge die Aktualisierung der Benutzeroberfläche
-        bpy.ops.wm.redraw_timer(type='DRAW_WIN_SWAP', iterations=1)
-else:
-    print("Objekt nicht gefunden: " + object_name)
-    
-    
+            # Perform cropping
+            cropped_image = capture.color[:, clip_pixels:-clip_pixels, :]
 
-if obj:
-    # Schleife x Mal
-    for i in range(65):
-        # Bewege das Objekt entlang der Y-Achse um 1 Einheit
-        obj.location.x += 1
+            cv2.imshow("k4a", cropped_image)
+            key = cv2.waitKey(10)
+            if key != -1:
+                cv2.destroyAllWindows()
+                break
 
-        # Drehe das Objekt um x Grad um die Z-Achse
-        obj.rotation_euler.z += math.radians(5)
-
-        # Aktualisiere das Objekt in Blender
-        bpy.context.view_layer.update()
-        print("Durchführung: ", i + 1)
-
-        # Warte x Sekunden
-        time.sleep(0.02)
-
-        # Erzwinge die Aktualisierung der Benutzeroberfläche
-        bpy.ops.wm.redraw_timer(type='DRAW_WIN_SWAP', iterations=1)
-else:
-    print("Objekt nicht gefunden: " + object_name)
+    k4a.stop()
 
 
-if obj:
-    # Schleife x Mal
-    for i in range(40):
-        # Bewege das Objekt entlang der Y-Achse um 1 Einheit
-        obj.location.y += 1
-
-        # Drehe das Objekt um x Grad um die Z-Achse
-        obj.rotation_euler.z += math.radians(5)
-
-        # Aktualisiere das Objekt in Blender
-        bpy.context.view_layer.update()
-        print("Durchführung: ", i + 1)
-
-        # Warte x Sekunden
-        time.sleep(0.02)
-
-        # Erzwinge die Aktualisierung der Benutzeroberfläche
-        bpy.ops.wm.redraw_timer(type='DRAW_WIN_SWAP', iterations=1)
-else:
-    print("Objekt nicht gefunden: " + object_name)
-    
-    
-if obj:
-    # Schleife x Mal
-    for i in range(10):
-        # Bewege das Objekt entlang der Y-Achse um 1 Einheit
-        obj.location.x -= 1
-
-        # Drehe das Objekt um x Grad um die Z-Achse
-        obj.rotation_euler.z += math.radians(5)
-
-        # Aktualisiere das Objekt in Blender
-        bpy.context.view_layer.update()
-        print("Durchführung: ", i + 1)
-
-        # Warte x Sekunden
-        time.sleep(0.02)
-
-        # Erzwinge die Aktualisierung der Benutzeroberfläche
-        bpy.ops.wm.redraw_timer(type='DRAW_WIN_SWAP', iterations=1)
-else:
-    print("Objekt nicht gefunden: " + object_name)
-    
+if __name__ == "__main__":
+    main()
