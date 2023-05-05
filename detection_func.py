@@ -128,7 +128,7 @@ class QRCodeDetector_time:
 
     def detect_qr_codes_avg(self):
         #thresh_values from 75 to 255
-        thresh_values = np.arange(40, 220, 1)
+        thresh_values = np.arange(60, 220, 1)
         min_avg_time = float('inf')
         min_std_time = float('inf')
         best_thresh = None
@@ -189,7 +189,12 @@ class QRCodeDetector_time:
                     min_std_time = std_time
                     best_thresh = j
                 if self.fast_calibration == True and avg_time > (min_avg_time + min_std_time):
-                    break
+
+                    return best_thresh,  min_avg_time, min_std_time
+                    self.k4a.stop()
+                    pbar.close()
+                    plt.close()
+        
         
         
         pbar.close()
@@ -240,11 +245,11 @@ class QRCodeDetector_empirical:
     def detect_qr_codes_avg(self):
         # Threshold values for different filters
         thresh_values = {
-            'Trunc': np.arange(40, 215, 1),
-            'Mean_C': np.arange(40, 215, 1),
-            'Otsu': np.arange(40, 215, 1),
-            'Binary': np.arange(40, 215, 1),
-            'Adaptive': np.arange(40, 215, 1)
+            'Trunc': np.arange(100, 115, 1),
+            'Mean_C': np.arange(100, 115, 1),
+            'Otsu': np.arange(100, 115, 1),
+            'Binary': np.arange(100, 115, 1),
+            'Adaptive': np.arange(100, 115, 1)
         }
         
         filters = {
