@@ -32,7 +32,7 @@ class QRCodeDetector:
         self.k4a.start()
         
         self.resolution = resolution
-        factors = {'720p': 1, '1080p': 2, '2160p': 3}
+        factors = {'720p': 1, '1080p': 0.666666, '2160p': 0.333333}
         self.factor = factors.get(self.resolution, 1)
         
 
