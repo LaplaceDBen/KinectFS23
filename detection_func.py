@@ -86,11 +86,11 @@ class QRCodeDetector:
                         qr_code_polygon = qr_code.polygon
                         orientation = qr_code.orientation
                         if self.resolution == '720p':
-                            qr_code_center = qr_code_center*1.0
+                            qr_code_center = tuple(int(x * 1.2) for x in qr_code_center)
                         elif self.resolution == '1080p':
-                            qr_code_center = qr_code_center*1.0
+                            qr_code_center = tuple(int(x * 1.2) for x in qr_code_center)
                         else:
-                            qr_code_center = qr_code_center*1.0
+                            qr_code_center = tuple(int(x * 1.2) for x in qr_code_center)
 
                         side = {'DOWN': 0, 'LEFT': 90, 'RIGHT': 180, 'UP': 270}.get(orientation, 0)
                         # Calculate orientation angle using QR code polygon
