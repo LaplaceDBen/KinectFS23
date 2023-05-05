@@ -98,6 +98,7 @@ class GUI_Azure_Kinect(QWidget):
         else:
             self.log_window.append(f"{current_time} - Programm is started - Number of objects: {self.num_obj}")
             self.calibrate_button.setEnabled(False)
+            self.start_button.setEnabled(False)
             #run the detection
             self.qrcode_detector = QRCodeDetector(num_qr_codes=self.num_obj,t = self.thresh, config=self.camera_config)
             #print(self.thresh)
@@ -143,6 +144,7 @@ class GUI_Azure_Kinect(QWidget):
     def stop(self):
         self.active=False
         self.config_button.setEnabled(True)
+        self.start_button.setEnabled(True)
         current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
         self.log_window.append(f"{current_time} - Programm is stopped")
         current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
