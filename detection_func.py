@@ -254,18 +254,12 @@ class QRCodeDetector_empirical:
     def detect_qr_codes_avg(self):
         # Threshold values for different filters
         thresh_values = {
-            'Trunc': np.arange(100, 115, 1),
-            'Mean_C': np.arange(100, 115, 1),
-            'Otsu': np.arange(100, 115, 1),
-            'Binary': np.arange(100, 115, 1),
-            'Adaptive': np.arange(100, 115, 1),
-            'Gaussian': np.arange(100, 115, 1),
-            'Binary_inv': np.arange(100, 115, 1),
-            'Otsu_inv': np.arange(100, 115, 1),
-            'Trunc_inv': np.arange(100, 115, 1),
-            'Mean_C_inv': np.arange(100, 115, 1),
-            'Gaussian_inv': np.arange(100, 115, 1),
-            'Adaptive_inv': np.arange(100, 115, 1)
+            'Trunc': np.arange(1, 225, 1),
+            'Mean_C': np.arange(1, 225, 1),
+            'Otsu': np.arange(1, 225, 1),
+            'Binary': np.arange(1, 225, 1),
+            'Adaptive': np.arange(3, 225, 2),
+
         }
         
         filters = {
@@ -274,14 +268,7 @@ class QRCodeDetector_empirical:
             'Otsu': cv2.THRESH_BINARY | cv2.THRESH_OTSU,
             'Binary': cv2.THRESH_BINARY,
             'Adaptive': cv2.ADAPTIVE_THRESH_MEAN_C,
-            'Gaussian': cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-            'Binary_inv': cv2.THRESH_BINARY_INV,
-            'Otsu_inv': cv2.THRESH_BINARY_INV,
-            'Trunc_inv': cv2.THRESH_TRUNC,
-            'Mean_C_inv': cv2.ADAPTIVE_THRESH_MEAN_C,
-            'Gaussian_inv': cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-            'Adaptive_inv': cv2.ADAPTIVE_THRESH_MEAN_C
-            
+
         }
         
         results = {
@@ -307,7 +294,7 @@ class QRCodeDetector_empirical:
                                 gray = cv2.cvtColor(cropped_image, cv2.COLOR_BGR2GRAY)
 
                                 if filter_name == 'Adaptive':
-                                    thresh = cv2.adaptiveThreshold(gray, 255, filters[filter_name], cv2.THRESH_BINARY, 11, 2)
+                                    thresh = cv2.adaptiveThreshold(gray, 255, filters[filter_name], cv2.THRESH_BINARY, threshold, 2)
                                 else:
                                     _, thresh = cv2.threshold(gray, threshold, 255, filters[filter_name])
 
