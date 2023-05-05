@@ -258,7 +258,14 @@ class QRCodeDetector_empirical:
             'Mean_C': np.arange(100, 115, 1),
             'Otsu': np.arange(100, 115, 1),
             'Binary': np.arange(100, 115, 1),
-            'Adaptive': np.arange(100, 115, 1)
+            'Adaptive': np.arange(100, 115, 1),
+            'Gaussian': np.arange(100, 115, 1),
+            'Binary_inv': np.arange(100, 115, 1),
+            'Otsu_inv': np.arange(100, 115, 1),
+            'Trunc_inv': np.arange(100, 115, 1),
+            'Mean_C_inv': np.arange(100, 115, 1),
+            'Gaussian_inv': np.arange(100, 115, 1),
+            'Adaptive_inv': np.arange(100, 115, 1)
         }
         
         filters = {
