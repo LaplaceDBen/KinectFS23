@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm_gui
 from config import camera_config
 import concurrent.futures
+import pandas as pd
 
 
 
@@ -224,5 +225,91 @@ class QRCodeDetector_time:
         self.k4a.stop()
         
         return best_thresh,  min_avg_time, min_std_time
+
+
+
+
+
+class QRCodeDetector_empirical:
+    def __init__(self, num_qr_codes, config, fast_calibration=False):
+        self.num_qr_codes = num_qr_codes
+        self.k4a = config
+        self.fast_calibration = fast_calibration
+        self.k4a.start()
+
+    def detect_qr_codes_avg(self):
+        # Threshold values for different filters
+        thresh_values = {
+            'Trunc': np.arange(40, 256, 1),
+            'Mean_C': np.arange(40, 256, 1),
+            'Otsu': np.arange(40, 256, 1),
+            'Binary': np.arange(40, 256, 1),
+            'Adaptive': np.arange(40, 256, 1)
+        }
+        
+        filters = {
+            'Trunc': cv2.THRESH_TRUNC,
+            'Mean_C': cv2.ADAPTIVE_THRESH_MEAN_C,
+            'Otsu': cv2.THRESH_BINARY | cv2.THRESH_OTSU,
+            'Binary': cv2.THRESH_BINARY,
+            'Adaptive': cv2.ADAPTIVE_THRESH_MEAN_C
+        }
+        
+        results = {
+            'Filter': [],
+            'Threshold': [],
+            'Average Time (sec)': []
+        }
+        
+        with tqdm_gui(total=len(thresh_values), desc="Progress", leave=True) as pbar:
+            for filter_name, thresh_range in thresh_values.items():
+                times = []
+                for threshold in thresh_range:
+                    print(f'Threshold: {threshold} - Filter: {filter_name}')
+                    for _ in range(5):
+                        start_time = time.time()
+                        detected_qr_codes = 0
+                        while detected_qr_codes < self.num_qr_codes:
+                            capture = self.k4a.get_capture()
+                            if capture.color is not None:
+                                height, width, _ = capture.color.shape
+                                clip_pixels = int(width * 0.25)
+                                cropped_image = capture.color[:, clip_pixels:-clip_pixels, :]
+                                gray = cv2.cvtColor(cropped_image, cv2.COLOR_BGR2GRAY)
+
+                                if filter_name == 'Adaptive':
+                                    thresh = cv2.adaptiveThreshold(gray, 255, filters[filter_name], cv2.THRESH_BINARY, 11, 2)
+                                else:
+                                    _, thresh = cv2.threshold(gray, threshold, 255, filters[filter_name])
+
+                                qr_codes = pyzbar.decode(thresh)
+                                detected_qr_codes += len(qr_codes)
+                            
+                            if time.time() - start_time > 0.5:
+                                break
+                        end_time = time.time()
+                        times.append(end_time - start_time)
+                
+                avg_time = np.mean(times)
+                results['Filter'].extend([filter_name] * len(thresh_range))
+                results['Threshold'].extend(thresh_range)
+                results['Average Time (sec)'].extend([avg_time] * len(thresh_range))
+                pbar.update(1)
+
+                print(f'Avg Time: {avg_time:.4f} sec')
+        
+        pbar.close()
+        plt.close()
+
+        # Convert results to dataframe
+        df = pd.DataFrame(results)
+
+        # Save dataframe to CSV
+        df.to_csv('threshold_results.csv', index=False)
+
+        self.k4a.stop()
+
+        return df
+
 
 

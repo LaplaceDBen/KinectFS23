@@ -2,7 +2,7 @@ import sys
 import os
 import datetime
 import matplotlib.pyplot as plt
-from detection_func import QRCodeDetector,QRCodeDetector_time
+from detection_func import QRCodeDetector,QRCodeDetector_time,QRCodeDetector_empirical
 from PySide6.QtCore import QFile
 from PySide6.QtGui import QIcon, QFont
 from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QTextEdit,QPushButton, QScrollArea, QInputDialog,QMessageBox,QCheckBox,QComboBox,QDialog,QDialogButtonBox,QFormLayout,QLabel,QLineEdit,QSpinBox,QVBoxLayout
