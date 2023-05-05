@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from detection_func import QRCodeDetector,QRCodeDetector_time,QRCodeDetector_empirical
 from PySide6.QtCore import QFile
 from PySide6.QtGui import QIcon, QFont
-from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QTextEdit,QPushButton, QScrollArea, QInputDialog,QMessageBox,QCheckBox,QComboBox,QDialog,QDialogButtonBox,QFormLayout,QLabel,QLineEdit,QSpinBox,QVBoxLayout
+from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QTextEdit,QPushButton, QScrollArea, QInputDialog,QMessageBox,QCheckBox,QComboBox,QDialog,QDialogButtonBox,QFormLayout,QLabel,QLineEdit,QSpinBox,QVBoxLayout,QHBoxLayout
 
 from PySide6.QtQuickControls2 import QQuickStyle
 import threading
@@ -56,6 +56,7 @@ class GUI_Azure_Kinect(QWidget):
         
         #add checkbox for fast calibration mode
         self.fast_calibration = QCheckBox("Fast Calibration")
+        self.display_button = QCheckBox("Display image")
     
         
         #make space
@@ -77,7 +78,12 @@ class GUI_Azure_Kinect(QWidget):
         self.layout.addWidget(self.stop_button)
         self.layout.addWidget(self.config_button)
         self.layout.addWidget(self.calibrate_button)
-        self.layout.addWidget(self.fast_calibration)
+        hbox = QHBoxLayout()
+        hbox.addWidget(self.fast_calibration)
+        hbox.addWidget(self.display_button)
+        #set allignment of the checkbox to the left
+        hbox.addStretch(1)
+        self.layout.addLayout(hbox)
         self.layout.addWidget(self.log_window)
         
 
@@ -101,7 +107,7 @@ class GUI_Azure_Kinect(QWidget):
             self.calibrate_button.setEnabled(False)
             self.start_button.setEnabled(False)
             #run the detection
-            self.qrcode_detector = QRCodeDetector(num_qr_codes=self.num_obj,t = self.thresh, config=self.camera_config, resolution=self.resolution)
+            self.qrcode_detector = QRCodeDetector(num_qr_codes=self.num_obj,t = self.thresh, config=self.camera_config, resolution=self.resolution,display=self.display_button)
             #print(self.thresh)
             self.qrcode_detector.detect_qr_codes()
 

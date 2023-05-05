@@ -20,9 +20,9 @@ import pandas as pd
 
 
 class QRCodeDetector:
-    def __init__(self, num_qr_codes, t, config, resolution):
+    def __init__(self, num_qr_codes, t, config, resolution, display=False):
         self.num_qr_codes = num_qr_codes
-
+        self.display = display
         # Set up logging
         logging.basicConfig(filename='qr_codes.log', level=logging.INFO, format='%(message)s')
         self.threashold = t
@@ -100,10 +100,11 @@ class QRCodeDetector:
                         x4, y4 = qr_code_polygon[3]
                         angle = np.rad2deg(np.arctan2(y2-y1, x2-x1)) + side
                         #angle = np.rad2deg(np.arctan2(np.abs(y2-y1), np.abs(x2-x1))) + side # <---- FIX?
-                        cv2.putText(gray, qr_code_data, (qr_code_rect[0], qr_code_rect[1]-10), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 0, 0), 5)
-                        cv2.namedWindow("QR Code Detector", cv2.WINDOW_NORMAL)
-                        cv2.resizeWindow("QR Code Detector", 1080,1080)
-                        cv2.imshow("QR Code Detector", thresh)
+                        if self.display:
+                            cv2.putText(gray, qr_code_data, (qr_code_rect[0], qr_code_rect[1]-10), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 0, 0), 5)
+                            cv2.namedWindow("QR Code Detector", cv2.WINDOW_NORMAL)
+                            cv2.resizeWindow("QR Code Detector", 1080,1080)
+                            cv2.imshow("QR Code Detector", thresh)
                     
                         qr_codes_info = ' | '.join([f'{qr_code.type}: {qr_code.data.decode()}, {((qr_code.rect[0] + qr_code.rect[2]) // 2, (qr_code.rect[1] + qr_code.rect[3]) // 2)}, {angle:.2f}' for qr_code in qr_codes]) + ' | '
 
