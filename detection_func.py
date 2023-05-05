@@ -32,6 +32,8 @@ class QRCodeDetector:
         self.k4a.start()
         
         self.resolution = resolution
+        factors = {'720p': 1, '1080p': 2, '2160p': 3}
+        self.factor = factors.get(self.resolution, 1)
         
 
     def detect_qr_codes(self):
@@ -85,9 +87,7 @@ class QRCodeDetector:
                         qr_code_center = ((qr_code_rect[0] + qr_code_rect[2]) // 2, (qr_code_rect[1] + qr_code_rect[3]) // 2)
                         qr_code_polygon = qr_code.polygon
                         orientation = qr_code.orientation
-                        factors = {'720p': 1.05, '1080p': 1.05, '2160p': 1.05}
-                        factor = factors.get(self.resolution, 1.0)
-                        qr_code_center = tuple(int(x * factor) for x in qr_code_center)
+                        qr_code_center = tuple(int(x * self.factor) for x in qr_code_center)
 
                         side = {'DOWN': 0, 'LEFT': 90, 'RIGHT': 180, 'UP': 270}.get(orientation, 0)
                         # Calculate orientation angle using QR code polygon
@@ -250,6 +250,7 @@ class QRCodeDetector_empirical:
         self.k4a = config
         self.fast_calibration = fast_calibration
         self.k4a.start()
+        
 
     def detect_qr_codes_avg(self):
         # Threshold values for different filters
