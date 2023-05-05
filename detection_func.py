@@ -20,7 +20,7 @@ import pandas as pd
 
 
 class QRCodeDetector:
-    def __init__(self, num_qr_codes, t, config):
+    def __init__(self, num_qr_codes, t, config, resolution):
         self.num_qr_codes = num_qr_codes
 
         # Set up logging
@@ -31,7 +31,7 @@ class QRCodeDetector:
                 
         self.k4a.start()
         
-
+        self.resolution = resolution
         
 
     def detect_qr_codes(self):
@@ -80,9 +80,17 @@ class QRCodeDetector:
                         qr_code_data = qr_code.data.decode()
                         qr_code_rect = qr_code.rect
                         # Center of qr code
+                        
+                            
                         qr_code_center = ((qr_code_rect[0] + qr_code_rect[2]) // 2, (qr_code_rect[1] + qr_code_rect[3]) // 2)
                         qr_code_polygon = qr_code.polygon
                         orientation = qr_code.orientation
+                        if self.resolution == '720p':
+                            qr_code_center = qr_code_center*1.0
+                        elif self.resolution == '1080p':
+                            qr_code_center = qr_code_center*1.0
+                        else:
+                            qr_code_center = qr_code_center*1.0
 
                         side = {'DOWN': 0, 'LEFT': 90, 'RIGHT': 180, 'UP': 270}.get(orientation, 0)
                         # Calculate orientation angle using QR code polygon

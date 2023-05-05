@@ -29,6 +29,7 @@ class GUI_Azure_Kinect(QWidget):
         self.num_obj = None
         self.detector = None
         self.thresh = None
+        self.resolution = '720p'
         self.camera_config = camera_config
 
         self.setWindowTitle('GUI_Azure_Kinect')
@@ -100,7 +101,7 @@ class GUI_Azure_Kinect(QWidget):
             self.calibrate_button.setEnabled(False)
             self.start_button.setEnabled(False)
             #run the detection
-            self.qrcode_detector = QRCodeDetector(num_qr_codes=self.num_obj,t = self.thresh, config=self.camera_config)
+            self.qrcode_detector = QRCodeDetector(num_qr_codes=self.num_obj,t = self.thresh, config=self.camera_config, resolution=self.resolution)
             #print(self.thresh)
             self.qrcode_detector.detect_qr_codes()
 
@@ -198,6 +199,7 @@ class GUI_Azure_Kinect(QWidget):
             if result == QDialog.Accepted:
                 # retrieve selected options from dropdowns
                 res = dropdown1.currentText()
+                self.resolution = resolutions[res]
                 syn = dropdown2.currentText()
                 resolution = resolutions[res]
                 # print selected options
