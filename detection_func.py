@@ -240,11 +240,11 @@ class QRCodeDetector_empirical:
     def detect_qr_codes_avg(self):
         # Threshold values for different filters
         thresh_values = {
-            'Trunc': np.arange(40, 256, 1),
-            'Mean_C': np.arange(40, 256, 1),
-            'Otsu': np.arange(40, 256, 1),
-            'Binary': np.arange(40, 256, 1),
-            'Adaptive': np.arange(40, 256, 1)
+            'Trunc': np.arange(40, 215, 1),
+            'Mean_C': np.arange(40, 215, 1),
+            'Otsu': np.arange(40, 215, 1),
+            'Binary': np.arange(40, 215, 1),
+            'Adaptive': np.arange(40, 215, 1)
         }
         
         filters = {
