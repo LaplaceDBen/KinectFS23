@@ -99,6 +99,8 @@ class QRCodeDetector:
                         #angle = np.rad2deg(np.arctan2(np.abs(y2-y1), np.abs(x2-x1))) + side # <---- FIX?
                         if self.display:
                             cv2.putText(gray, qr_code_data, (qr_code_rect[0], qr_code_rect[1]-10), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 0, 0), 5)
+                            #title
+                            cv2.putText(gray, "Live View", (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 0, 0), 5)
                             cv2.namedWindow("QR Code Detector", cv2.WINDOW_NORMAL)
                             cv2.resizeWindow("QR Code Detector", 1080,1080)
                             cv2.imshow("QR Code Detector", thresh)
@@ -264,7 +266,15 @@ class QRCodeDetector_empirical:
             'Mean_C': cv2.ADAPTIVE_THRESH_MEAN_C,
             'Otsu': cv2.THRESH_BINARY | cv2.THRESH_OTSU,
             'Binary': cv2.THRESH_BINARY,
-            'Adaptive': cv2.ADAPTIVE_THRESH_MEAN_C
+            'Adaptive': cv2.ADAPTIVE_THRESH_MEAN_C,
+            'Gaussian': cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+            'Binary_inv': cv2.THRESH_BINARY_INV,
+            'Otsu_inv': cv2.THRESH_BINARY_INV,
+            'Trunc_inv': cv2.THRESH_TRUNC,
+            'Mean_C_inv': cv2.ADAPTIVE_THRESH_MEAN_C,
+            'Gaussian_inv': cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+            'Adaptive_inv': cv2.ADAPTIVE_THRESH_MEAN_C
+            
         }
         
         results = {
