@@ -205,7 +205,7 @@ class GUI_Azure_Kinect(QWidget):
             if result == QDialog.Accepted:
                 # retrieve selected options from dropdowns
                 res = dropdown1.currentText()
-                self.resolution = resolutions[res]
+                self.resolution = res
                 syn = dropdown2.currentText()
                 resolution = resolutions[res]
                 # print selected options
