@@ -85,9 +85,10 @@ class QRCodeDetector:
                         
                             
                         qr_code_center = ((qr_code_rect[0] + qr_code_rect[2]) // 2, (qr_code_rect[1] + qr_code_rect[3]) // 2)
+                        qr_code_center = tuple(int(x * self.factor) for x in qr_code_center) #Factor by which the image is resized (according to the resolution)
                         qr_code_polygon = qr_code.polygon
                         orientation = qr_code.orientation
-                        qr_code_center = tuple(int(x * self.factor) for x in qr_code_center)
+                        
 
                         side = {'DOWN': 0, 'LEFT': 90, 'RIGHT': 180, 'UP': 270}.get(orientation, 0)
                         # Calculate orientation angle using QR code polygon
