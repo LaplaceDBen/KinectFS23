@@ -105,8 +105,6 @@ class QRCodeDetector:
             del capture
             del gray
             del thresh
-            del thresh2
-            del qr_codes1
 
 
     def stop(self):
