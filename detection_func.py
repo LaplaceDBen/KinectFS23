@@ -198,11 +198,11 @@ class QRCodeDetector_time:
                     min_std_time = std_time
                     best_thresh = j
                 if self.fast_calibration == True and avg_time > (min_avg_time + min_std_time):
-
-                    return best_thresh,  min_avg_time, min_std_time
                     self.k4a.stop()
                     pbar.close()
                     plt.close()
+                    return best_thresh,  min_avg_time, min_std_time
+                    
         
         
         
