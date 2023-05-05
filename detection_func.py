@@ -50,26 +50,29 @@ class QRCodeDetector:
                 
                 gray = cv2.cvtColor(cropped_image, cv2.COLOR_BGR2GRAY)
                 _, thresh = cv2.threshold(gray, self.threashold, 255, cv2.THRESH_TRUNC)
-                thresh2 = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 21, 2)
+                #thresh2 = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 21, 2)
 
                 
                 wait = cv2.waitKey(1) #necessary for the camera to work
                 # Detect QR codes in the grayscale image
                 # Create a thread or process pool
+                
+                '''
                 with concurrent.futures.ThreadPoolExecutor() as executor:
                     # Submit tasks to the pool for parallel execution
                     qr_codes1 = executor.submit(pyzbar.decode, thresh)
                     qr_codes2 = executor.submit(pyzbar.decode, thresh2)
-                    
+                '''
+                qr_codes = pyzbar.decode(thresh)   
 
                 # Retrieve the results from the executed tasks
-                qr_codes1 = qr_codes1.result()
-                qr_codes2 = qr_codes2.result()
-                qr_codes = qr_codes1 if len(qr_codes1) == self.num_qr_codes else qr_codes2
+                #qr_codes1 = qr_codes1.result()
+                #qr_codes2 = qr_codes2.result()
+                #qr_codes = qr_codes1 if len(qr_codes1) == self.num_qr_codes else qr_codes2
                 # Check if the required number of QR codes has been found
                 
                 print("QR codes with trunc: ", len(qr_codes))
-                print("QR codes with adaptive thresholding: ", len(qr_codes2))
+                #print("QR codes with adaptive thresholding: ", len(qr_codes2))
                 if len(qr_codes) == self.num_qr_codes:
                     # Write the QR code information to the log file
                     qr_codes_info = ''
