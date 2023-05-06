@@ -331,3 +331,95 @@ class QRCodeDetector_empirical:
 
 
 
+class QRCodeDetector_experimental:
+    def __init__(self, num_qr_codes, t, config, resolution, display=False):
+        self.num_qr_codes = num_qr_codes
+        self.display = display
+        # Set up logging
+        logging.basicConfig(filename='qr_codes.log', level=logging.INFO, format='%(message)s')
+        self.threashold = t
+        # Initialize PyK4A
+        self.k4a = config
+                
+        self.k4a.start()
+        
+        self.resolution = resolution
+        factors = {'720p': 1, '1080p': 0.666666, '2160p': 0.333333}
+        self.factor = factors.get(self.resolution, 1)
+        
+
+    def detect_qr_codes(self):
+        # Capture a frame from the camera
+        detector = cv2.QRCodeDetector()
+        while True:
+            capture = self.k4a.get_capture()
+            if capture.color is not None:
+                
+                height, width, _ = capture.color.shape
+
+                # Calculate the number of pixels to be clipped on each side
+                clip_pixels = int(width * 0.25)
+
+                # Perform cropping
+                cropped_image = capture.color[:, clip_pixels:-clip_pixels, :]
+                
+                gray = cv2.cvtColor(cropped_image, cv2.COLOR_BGR2GRAY)
+                _, thresh = cv2.threshold(gray, self.threashold, 255, cv2.THRESH_TRUNC)
+                wait = cv2.waitKey(1) #necessary for the camera to work
+                # Detect QR codes in the grayscale image
+                data, bbox, _ = detector.detectAndDecode(thresh)   
+                print("QR codes with trunc: ", len(bbox))
+                #print("QR codes with adaptive thresholding: ", len(qr_codes2))
+                if len(bbox) == self.num_qr_codes:
+                    # Write the QR code information to the log file
+                    qr_codes_info = ''
+                    for i in range(len(bbox)):
+                        qr_code_center = ((bbox[i][0] + bbox[i][2]) // 2, (bbox[i][1] + bbox[i][3]) // 2)
+                        qr_code_polygon = np.array([bbox[i][0:2], bbox[i][2:4], bbox[i][4:6], bbox[i][6:8]], dtype=np.float32)
+
+                        # Calculate orientation angle using solvePnP
+                        object_points = np.array([[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0]], dtype=np.float32)
+                        camera_matrix = np.array([[1000, 0, thresh.shape[1] / 2], [0, 1000, thresh.shape[0] / 2], [0, 0, 1]], dtype=np.float32)
+                        dist_coeffs = np.zeros((4, 1), dtype=np.float32)
+                        success, rotation_vector, translation_vector = cv2.solvePnP(object_points, qr_code_polygon, camera_matrix, dist_coeffs)
+
+                        if success:
+                            # Convert rotation vector to rotation matrix
+                            rotation_matrix, _ = cv2.Rodrigues(rotation_vector)
+                            # Calculate Euler angles from rotation matrix
+                            y_rot, x_rot, z_rot = cv2.decomposeProjectionMatrix(rotation_matrix)[6]
+
+                            # Convert radians to degrees
+                            x_rot = np.rad2deg(x_rot)
+                            y_rot = np.rad2deg(y_rot)
+                            z_rot = np.rad2deg(z_rot)
+
+                            # Choose angle depending on orientation
+                            if y_rot < 0:
+                                angle = -x_rot
+                            else:
+                                angle = x_rot
+                        #angle = np.rad2deg(np.arctan2(np.abs(y2-y1), np.abs(x2-x1))) + side # <---- FIX?
+                        if self.display:
+                            cv2.putText(thresh, f'{angle:.2f}', qr_code_center, cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+                            cv2.polylines(thresh, [qr_code_polygon.astype(np.int32)], True, (0, 0, 255), 2)
+                            cv2.circle(thresh, qr_code_center, 5, (0, 0, 255), -1)
+                            cv2.imshow('thresh', thresh)
+                    
+                        qr_codes_info = ' | '.join([qr_codes_info, f'{data[i]}: {angle:.2f}'])+' | '
+
+                    logging.info(f'{qr_codes_info}{datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")}')
+
+            # Release the capture object
+            del capture
+            del gray
+            del thresh
+
+
+    def stop(self):
+        # Stop the camera capture
+        self.k4a.stop()
+        # Release the camera
+        
+    def __del__(self):
+        self.k4a.stop()
