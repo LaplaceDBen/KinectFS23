@@ -6,7 +6,7 @@ import math
 import threading
 
 logPath = r"C:\Users\rapha\OneDrive\Desktop\CDS_FS23\Projektarbeit\GitHubNew\KinectFS23\raffi\qr_codes_test2.log"      # Test-Logfile
-# logPath = r"C:\Users\rapha\OneDrive\Desktop\CDS_FS23\Projektarbeit\GitHubNew\KinectFS23\qr_codes.log"                   # Echtes Logfile
+# logPath = r"C:\Users\rapha\OneDrive\Desktop\CDS_FS23\Projektarbeit\GitHubNew\KinectFS23\qr_codes.log"                # Echtes Logfile
 
 house_A_object_name = "House"
 house_B_object_name = "Modern House"

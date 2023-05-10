@@ -1,4 +1,4 @@
-# EXPERIMENTAL!!!
+# EXPERIMENTAL!!! Current version will crash Blender!
 
 import time
 import os
