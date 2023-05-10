@@ -1,25 +1,24 @@
 import random
 import time
 from datetime import datetime
-import keyboard
 
 logPath = r"raffi\qr_codes_test2.log"
 
-for i in range(4000):
+for i in range(2000):
     value1 = random.randint(40, 300)
     value2 = random.randint(40, 300)
     value3 = random.randint(0, 360)
-    value4 = random.randint(-300, -40)
-    value5 = random.randint(-300, -40)
+    value4 = random.randint(40, 300)
+    value5 = random.randint(40, 300)
     value6 = random.randint(0, 360)
-    value7 = random.randint(-300, -40)
+    value7 = random.randint(40, 300)
     value8 = random.randint(40, 300)
     value9 = random.randint(0, 360)
     value10 = random.randint(40, 300)
-    value11 = random.randint(-300, -40)
+    value11 = random.randint(40, 300)
     value12 = random.randint(0, 360)
-    value13 = random.randint(-300, 300)
-    value14 = random.randint(-300, 300)
+    value13 = random.randint(40, 300)
+    value14 = random.randint(40, 300)
     value15 = random.randint(0, 360)
 
 
@@ -33,5 +32,5 @@ for i in range(4000):
     # current_time = datetime.now().time()
     # print(f'Just wrote a line, current time: {current_time}')
 
-    time.sleep(0.001)  # wait for 0.1 seconds before next loop iteration
+    time.sleep(0.01)  # wait for x seconds before next loop iteration
     
