@@ -110,15 +110,17 @@ class QRCodeDetector:
                             cv2.imshow("QR Code Detector", thresh)
                     
                         qr_codes_info = ' | '.join([f'{qr_code.type}: {qr_code.data.decode()}, {((qr_code.rect[0] + qr_code.rect[2]) // 2, (qr_code.rect[1] + qr_code.rect[3]) // 2)}, {angle:.2f}' for qr_code in qr_codes]) + ' | '
+                    '''
                     if qr_codes_info == previous_qr_codes_info:
                         logging.info(f'{qr_codes_info}{datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")}')
                         check = True
                     elif check == True:
                         logging.info(f'{qr_codes_info}{datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")}')
                         check = False
+                    '''
 
                     previous_qr_codes_info = qr_codes_info
-                    #logging.info(f'{qr_codes_info}{datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")}')
+                    logging.info(f'{qr_codes_info}{datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")}')
 
             # Release the capture object
             del capture
