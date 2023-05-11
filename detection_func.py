@@ -36,7 +36,7 @@ class QRCodeDetector:
         self.k4a.start()
         
         self.resolution = resolution
-        factors = {'720p': 1, '1080p': 0.666666, '2160p': 0.333333}
+        factors = {'720p': 3, '1080p': 2, '2160p': 1}
         self.factor = factors.get(self.resolution, 1)
         
 
@@ -63,12 +63,6 @@ class QRCodeDetector:
                 # Detect QR codes in the grayscale image
                 # Create a thread or process pool
                 
-                '''
-                with concurrent.futures.ThreadPoolExecutor() as executor:
-                    # Submit tasks to the pool for parallel execution
-                    qr_codes1 = executor.submit(pyzbar.decode, thresh)
-                    qr_codes2 = executor.submit(pyzbar.decode, thresh2)
-                '''
                 qr_codes = pyzbar.decode(thresh)   
 
                 # Retrieve the results from the executed tasks
@@ -95,9 +89,6 @@ class QRCodeDetector:
                         
 
                         side = {'DOWN': 0, 'LEFT': 90, 'RIGHT': 180, 'UP': 270}.get(orientation)
-                        side1 = {'DOWN': 0, 'LEFT': 90, 'RIGHT': 180, 'UP': 270}.get(orientation)
-                        if side != side1:
-                            print("Orientation is not the same")
 
                         # Calculate orientation angle using QR code polygon
                         x1, y1 = qr_code_polygon[0]
