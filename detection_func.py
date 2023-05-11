@@ -24,7 +24,11 @@ class QRCodeDetector:
         self.num_qr_codes = num_qr_codes
         self.display = display
         # Set up logging
-        logging.basicConfig(filename='qr_codes.log', level=logging.INFO, format='%(message)s')
+        self.logfile = 'qr_codes.log'
+        with open(self.logfile, 'w'):
+            pass
+        logging.basicConfig(filename=self.logfile, level=logging.INFO, format='%(message)s')
+
         self.threashold = t
         # Initialize PyK4A
         self.k4a = config
