@@ -58,10 +58,6 @@ class GUI_Azure_Kinect(QWidget):
         self.fast_calibration = QCheckBox("Fast Calibration")
         self.display_button = QCheckBox("Display image")
     
-        
-        #make space
-        
-
         self.log_window = QTextEdit()
         self.log_window.setPlaceholderText('Log')
         self.log_window.setFontWeight(QFont.Bold)
@@ -85,11 +81,6 @@ class GUI_Azure_Kinect(QWidget):
         hbox.addStretch(1)
         self.layout.addLayout(hbox)
         self.layout.addWidget(self.log_window)
-        
-
-
-
-                # set stylesheet
 
         stylesheet = QFile('style.css')
         if stylesheet.open(QFile.ReadOnly | QFile.Text):
