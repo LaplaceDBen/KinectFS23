@@ -29,9 +29,9 @@ class DefaultLocationsOperator(bpy.types.Operator):
 
         obj2 = bpy.data.objects.get(house_B_object_name)
         if obj2:
-            obj2.location.x = 25
-            obj2.location.y = 30
-            obj2.rotation_euler.z = math.radians(270)
+            obj2.location.x = 75
+            obj2.location.y = 75
+            obj2.rotation_euler.z = math.radians(180)
 
         obj3 = bpy.data.objects.get(house_C_object_name)
         if obj3:
@@ -41,14 +41,14 @@ class DefaultLocationsOperator(bpy.types.Operator):
 
         obj4 = bpy.data.objects.get(house_D_object_name)
         if obj4:
-            obj4.location.x = 20
-            obj4.location.y = -15
+            obj4.location.x = 85
+            obj4.location.y = 15
             obj4.rotation_euler.z = math.radians(0)
 
         obj5 = bpy.data.objects.get(tree_object_name)
         if obj5:
-            obj5.location.x = 55
-            obj5.location.y = 38
+            obj5.location.x = 60
+            obj5.location.y = 50
             obj5.rotation_euler.z = math.radians(0.000014)
 
         bpy.context.view_layer.update()

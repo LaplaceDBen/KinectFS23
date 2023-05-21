@@ -1,6 +1,16 @@
 """
-Version 8: mit unlimitierter Queue
+Addon zur Version 8: mit unlimitierter Queue
 """
+
+bl_info = {
+    "name": "Kinect Project 1",
+    "author": "Raphael Brunold, Benito Rusconi",
+    "version": (1, 0),
+    "blender": (3, 5, 0),
+    "location": "View3D > Object > Default Locations",
+    "description": "Changing the location of objects based on contents of a logfile",
+    "category": "Object",
+}
 
 import time
 import os
@@ -10,7 +20,7 @@ import math
 import threading
 
 log_path = r"C:\Users\rapha\OneDrive\Desktop\CDS_FS23\Projektarbeit\GitHubNew\KinectFS23\blender\qr_codes_test2.log"      # Test-Logfile
-# log_path = r"C:\Users\rapha\OneDrive\Desktop\CDS_FS23\Projektarbeit\GitHubNew\KinectFS23\qr_codes.log"                  # Echtes Logfile
+# log_path = r"C:\Users\rapha\OneDrive\Desktop\CDS_FS23\Projektarbeit\GitHubNew\KinectFS23\qr_codes.log"                # Echtes Logfile
 
 object_dict = {
     "Haus_A":"House",
@@ -20,6 +30,19 @@ object_dict = {
     "Baum"  :"Tree"
 }
 
+# Button in Blender (nur in Addon)
+class KinectProjectPanel(bpy.types.Panel):
+    bl_idname = "OBJECT_PT_kinect_project_1"
+    bl_label = "Kinect Project 1"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "Kinect Project 1"
+
+    def draw(self, context):
+        layout = self.layout
+        row = layout.row()
+        row.operator(OBJECT_OT_modal_operator.bl_idname)
+        
 # Information extrahieren 
 def object_handling(log_object):  # Input ist das "log_object", alle Informationen zu einem einzelnen Objekt aus der Zeile im Logfile
     blender_object = bpy.data.objects.get(object_dict.get(log_object[0]))   # Blender Objekt auswählen entsprechend dem Namen
@@ -59,7 +82,7 @@ class FollowLogThread(threading.Thread):
 # Modal Operator (spezieller Operator in Blender für laufende Aktionen und Events)
 class OBJECT_OT_modal_operator(bpy.types.Operator):
     bl_idname = "object.modal_operator"
-    bl_label = "Move Objects"
+    bl_label = "Move Objects (Unlimited Queue)"
     _timer = None
 
     def __init__(self):
@@ -107,9 +130,11 @@ class OBJECT_OT_modal_operator(bpy.types.Operator):
 
 def register(): # Das wird benötigt, dass die Klasse in Blender als Operator registriert wird.
     bpy.utils.register_class(OBJECT_OT_modal_operator)
+    bpy.utils.register_class(KinectProjectPanel)
 
 def unregister(): # Operator wieder entfernen, potentielle Konflikte entfernen
     bpy.utils.unregister_class(OBJECT_OT_modal_operator)
+    bpy.utils.unregister_class(KinectProjectPanel)
 
 if __name__ == "__main__":
     register()

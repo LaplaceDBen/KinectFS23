@@ -26,11 +26,11 @@ for i in range(2000):
     # newLine = f"QRCODE: Haus_A, ({value1}, {value2}), {value3} | 16:49:57.222173\n"
     # newLine = f"QRCODE: Haus_B, ({value4}, {value5}), {value6} | 16:49:57.222173\n"
 
-    with open(logPath, 'a') as f:
+    with open(logPath, "a") as f:
         f.write(newLine)
     
     # current_time = datetime.now().time()
-    # print(f'Just wrote a line, current time: {current_time}')
+    # print(f"Just wrote a line, current time: {current_time}")
 
     time.sleep(0.01)  # wait for x seconds before next loop iteration
     

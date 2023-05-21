@@ -1,6 +1,16 @@
 """
-Version 8: mit unlimitierter Queue
+Addon zur Version 10: mit limitierter Queue
 """
+
+bl_info = {
+    "name": "Kinect Project 2",
+    "author": "Raphael Brunold, Benito Rusconi",
+    "version": (1, 0),
+    "blender": (3, 5, 0),
+    "location": "View3D > Object > Default Locations",
+    "description": "Changing the location of objects based on contents of a logfile, version with limited queue",
+    "category": "Object",
+}
 
 import time
 import os
@@ -8,9 +18,10 @@ import re
 import bpy
 import math
 import threading
+from collections import deque # für limitierte Queue
 
 log_path = r"C:\Users\rapha\OneDrive\Desktop\CDS_FS23\Projektarbeit\GitHubNew\KinectFS23\blender\qr_codes_test2.log"      # Test-Logfile
-# log_path = r"C:\Users\rapha\OneDrive\Desktop\CDS_FS23\Projektarbeit\GitHubNew\KinectFS23\qr_codes.log"                  # Echtes Logfile
+# log_path = r"C:\Users\rapha\OneDrive\Desktop\CDS_FS23\Projektarbeit\GitHubNew\KinectFS23\qr_codes.log"                # Echtes Logfile
 
 object_dict = {
     "Haus_A":"House",
@@ -20,17 +31,30 @@ object_dict = {
     "Baum"  :"Tree"
 }
 
-# Information extrahieren 
-def object_handling(log_object):  # Input ist das "log_object", alle Informationen zu einem einzelnen Objekt aus der Zeile im Logfile
-    blender_object = bpy.data.objects.get(object_dict.get(log_object[0]))   # Blender Objekt auswählen entsprechend dem Namen
-    info = (int(log_object[1]), int(log_object[2]), float(log_object[3]))   # y- und y-Koordinate, Rotation
+# Button in Blender (nur in Addon)
+class KinectProjectPanel2(bpy.types.Panel):
+    bl_idname = "OBJECT_PT_kinect_project_2"
+    bl_label = "Kinect Project 2"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "Kinect Project 2"
+
+    def draw(self, context):
+        layout = self.layout
+        row = layout.row()
+        row.operator(OBJECT_OT_modal_operator2.bl_idname)
+        
+# Informationen extrahieren
+def object_handling(log_object):
+    blender_object = bpy.data.objects.get(object_dict.get(log_object[0]))
+    info = (int(log_object[1]), int(log_object[2]), float(log_object[3]))
     return blender_object, info
 
 # Objekte bewegen und rotieren
 def move(blender_object, info):
-        blender_object.location.x = info[0]*0.3
-        blender_object.location.y = info[1]*0.3
-        blender_object.rotation_euler.z = math.radians(info[2])
+    blender_object.location.x = info[0] * 0.3
+    blender_object.location.y = info[1] * 0.3
+    blender_object.rotation_euler.z = math.radians(info[2])
 
 # Klasse, die neue Zeilen aus dem Logfile holt
 class FollowLogThread(threading.Thread):
@@ -57,24 +81,24 @@ class FollowLogThread(threading.Thread):
                 self.callback(line)
 
 # Modal Operator (spezieller Operator in Blender für laufende Aktionen und Events)
-class OBJECT_OT_modal_operator(bpy.types.Operator):
-    bl_idname = "object.modal_operator"
-    bl_label = "Move Objects"
+class OBJECT_OT_modal_operator2(bpy.types.Operator):
+    bl_idname = "object.modal_operator2"
+    bl_label = "Move Objects (Limited Queue)"
     _timer = None
 
     def __init__(self):
-        self.log_line_queue = []
-        self.log_line_lock = threading.Lock()   # Nur ein Prozess darf aufs mal auf die log_line zugreifen
+        self.log_line_queue = deque(maxlen=10)  # Queue mit einer maximalen Länge von 10
+        self.log_line_lock = threading.Lock()   # Nur ein Prozess darf aufs Mal auf die log_line zugreifen
 
     def modal(self, context, event):
         if event.type in {"Q", "LEFTMOUSE", "ESC"}:     # Script stoppen, wenn eine dieser Tasten gedrückt wird
             self.log_thread.stop()
             self.log_thread.join()
             return {"CANCELLED"}
-        
+
         with self.log_line_lock:
             if self.log_line_queue:                     # Wenn etwas in der Queue ist...
-                log_line = self.log_line_queue.pop(0)   # Vordeste Zeile nehmen...
+                log_line = self.log_line_queue.popleft()   # Älteste Zeile nehmen...
                 log_objects = re.findall(r"QRCODE:\s([\w]+),\s\(([-]?\d+),\s([-]?\d+)\),\s([\d\.]+)\s\|\s", log_line)   # Mit RegEx die Objekte "trennen"
                 # Reihenfolge der Objekte in der log_line ist zufällig, manchmal steht zuerst "Haus_A" und manchmal "Haus_D"
 
@@ -92,7 +116,7 @@ class OBJECT_OT_modal_operator(bpy.types.Operator):
 
     def execute(self, context):
         self._timer = context.window_manager.event_timer_add(0.005, window=context.window)  # Die Funktion "modal" wird in diesem Intervall ständig aufgerufen, solange der Modal Operator aktiv ist
-        self.log_thread = FollowLogThread(log_path, self.add_log_line) 
+        self.log_thread = FollowLogThread(log_path, self.add_log_line)
         self.log_thread.start()
         context.window_manager.modal_handler_add(self)
         return {"RUNNING_MODAL"}
@@ -106,10 +130,12 @@ class OBJECT_OT_modal_operator(bpy.types.Operator):
         self.log_thread.stop()
 
 def register(): # Das wird benötigt, dass die Klasse in Blender als Operator registriert wird.
-    bpy.utils.register_class(OBJECT_OT_modal_operator)
+    bpy.utils.register_class(OBJECT_OT_modal_operator2)
+    bpy.utils.register_class(KinectProjectPanel2)
 
 def unregister(): # Operator wieder entfernen, potentielle Konflikte entfernen
-    bpy.utils.unregister_class(OBJECT_OT_modal_operator)
+    bpy.utils.unregister_class(OBJECT_OT_modal_operator2)
+    bpy.utils.unregister_class(KinectProjectPanel2)
 
 if __name__ == "__main__":
     register()

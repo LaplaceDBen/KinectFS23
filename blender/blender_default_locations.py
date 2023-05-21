@@ -15,9 +15,9 @@ if obj1:
 
 obj2 = bpy.data.objects.get(house_B_object_name)
 if obj2:
-    obj2.location.x = 25
-    obj2.location.y = 30
-    obj2.rotation_euler.z = math.radians(270)
+    obj2.location.x = 75
+    obj2.location.y = 75
+    obj2.rotation_euler.z = math.radians(180)
 
 obj3 = bpy.data.objects.get(house_C_object_name)
 if obj3:
