@@ -108,19 +108,19 @@ class QRCodeDetector:
                             cv2.namedWindow("QR Code Detector", cv2.WINDOW_NORMAL)
                             cv2.resizeWindow("QR Code Detector", 1080,1080)
                             cv2.imshow("QR Code Detector", thresh)
+                        else:
+                            continue
                     
                         qr_codes_info = ' | '.join([f'{qr_code.type}: {qr_code.data.decode()}, {((qr_code.rect[0] + qr_code.rect[2]) // 2, (qr_code.rect[1] + qr_code.rect[3]) // 2)}, {angle:.2f}' for qr_code in qr_codes]) + ' | '
-                    '''
+                    
                     if qr_codes_info == previous_qr_codes_info:
                         logging.info(f'{qr_codes_info}{datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")}')
                         check = True
-                    elif check == True:
-                        logging.info(f'{qr_codes_info}{datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")}')
-                        check = False
-                    '''
+                    
+                    
 
                     previous_qr_codes_info = qr_codes_info
-                    logging.info(f'{qr_codes_info}{datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")}')
+                    #logging.info(f'{qr_codes_info}{datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")}')
 
             # Release the capture object
             del capture
@@ -150,7 +150,7 @@ class QRCodeDetector_time:
 
     def detect_qr_codes_avg(self):
         #thresh_values from 75 to 255
-        thresh_values = np.arange(65, 215, 1)
+        thresh_values = np.arange(55, 215, 1)
         min_avg_time = float('inf')
         min_std_time = float('inf')
         best_thresh = None
@@ -210,7 +210,7 @@ class QRCodeDetector_time:
                     min_avg_time = avg_time
                     min_std_time = std_time
                     best_thresh = j
-                if self.fast_calibration == True and avg_time > (min_avg_time + min_std_time):
+                if self.fast_calibration == True and avg_time > (min_avg_time + 2*min_std_time):
                     self.k4a.stop()
                     pbar.close()
                     plt.close()
