@@ -53,7 +53,7 @@ class FollowLogThread(threading.Thread):
             while not self.stopped():
                 line = file.readline()
                 if not line:            # Falls keine neue Zeile da ist, kurz warten
-                    time.sleep(0.005)
+                    time.sleep(0.001)
                     continue
                 self.callback(line)
 
