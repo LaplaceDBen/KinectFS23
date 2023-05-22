@@ -125,6 +125,8 @@ class QRCodeDetector:
                     
 
                     previous_qr_codes_info = qr_codes_info
+                    
+                    #this line would allow greater speed with less reliability
                     #logging.info(f'{qr_codes_info}{datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")}')
 
             # Release the capture object
