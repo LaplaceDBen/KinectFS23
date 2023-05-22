@@ -20,7 +20,7 @@ import math
 import threading
 from collections import deque # für limitierte Queue
 
-log_path = r"C:\Users\rapha\OneDrive\Desktop\CDS_FS23\Projektarbeit\GitHubNew\KinectFS23\blender\qr_codes_test2.log"      # Test-Logfile
+log_path = r"C:\Users\benit\Documents\CDS\04_FS23\Projektarbeit_cds-901\KinectFS23\qr_codes.log"      # Test-Logfile
 # log_path = r"C:\Users\rapha\OneDrive\Desktop\CDS_FS23\Projektarbeit\GitHubNew\KinectFS23\qr_codes.log"                # Echtes Logfile
 
 object_dict = {

@@ -20,7 +20,7 @@ import pandas as pd
 
 
 class QRCodeDetector:
-    def __init__(self, num_qr_codes, t, config, resolution, display=False):
+    def __init__(self, num_qr_codes, t, config, resolution, display):
         self.num_qr_codes = num_qr_codes
         self.display = display
         # Set up logging
@@ -34,6 +34,7 @@ class QRCodeDetector:
         self.k4a = config
                 
         self.k4a.start()
+        self.run = True
         
         self.resolution = resolution
         factors = {'720p': 3, '1080p': 2, '2160p': 1}
@@ -44,7 +45,7 @@ class QRCodeDetector:
         # Capture a frame from the camera
         previous_qr_codes_info = None
         check = True
-        while True:
+        while self.run == True:
             capture = self.k4a.get_capture()
             if capture.color is not None:
                 
@@ -101,17 +102,21 @@ class QRCodeDetector:
                         #round angle to full degrees
                         angle = round(angle,1)
                         #angle = np.rad2deg(np.arctan2(np.abs(y2-y1), np.abs(x2-x1))) + side # <---- FIX?
-                        if self.display:
+                        if self.display == True:
+                            qr_codes_info = ' | '.join([f'{qr_code.type}: {qr_code.data.decode()}, {((qr_code.rect[0] + qr_code.rect[2]) // 2, (qr_code.rect[1] + qr_code.rect[3]) // 2)}, {angle:.2f}' for qr_code in qr_codes]) + ' | '
+
                             cv2.putText(gray, qr_code_data, (qr_code_rect[0], qr_code_rect[1]-10), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 0, 0), 5)
                             #title
                             cv2.putText(gray, "Live View", (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 0, 0), 5)
                             cv2.namedWindow("QR Code Detector", cv2.WINDOW_NORMAL)
                             cv2.resizeWindow("QR Code Detector", 1080,1080)
                             cv2.imshow("QR Code Detector", thresh)
+                            
                         else:
-                            continue
+                            qr_codes_info = ' | '.join([f'{qr_code.type}: {qr_code.data.decode()}, {((qr_code.rect[0] + qr_code.rect[2]) // 2, (qr_code.rect[1] + qr_code.rect[3]) // 2)}, {angle:.2f}' for qr_code in qr_codes]) + ' | '
+
                     
-                        qr_codes_info = ' | '.join([f'{qr_code.type}: {qr_code.data.decode()}, {((qr_code.rect[0] + qr_code.rect[2]) // 2, (qr_code.rect[1] + qr_code.rect[3]) // 2)}, {angle:.2f}' for qr_code in qr_codes]) + ' | '
+                        #qr_codes_info = ' | '.join([f'{qr_code.type}: {qr_code.data.decode()}, {((qr_code.rect[0] + qr_code.rect[2]) // 2, (qr_code.rect[1] + qr_code.rect[3]) // 2)}, {angle:.2f}' for qr_code in qr_codes]) + ' | '
                     
                     if qr_codes_info == previous_qr_codes_info:
                         logging.info(f'{qr_codes_info}{datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")}')
@@ -120,6 +125,8 @@ class QRCodeDetector:
                     
 
                     previous_qr_codes_info = qr_codes_info
+                    
+                    #this line would allow greater speed with less reliability
                     #logging.info(f'{qr_codes_info}{datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")}')
 
             # Release the capture object
@@ -130,11 +137,13 @@ class QRCodeDetector:
 
     def stop(self):
         # Stop the camera capture
+        self.run = False
         self.k4a.stop()
-        # Release the camera
+        #wait for the camera to stop
+        time.sleep(0.1)
+        #delete class
+        del self
         
-    def __del__(self):
-        self.k4a.stop()
 
 
 
@@ -149,7 +158,7 @@ class QRCodeDetector_time:
         self.k4a.start()
 
     def detect_qr_codes_avg(self):
-        #thresh_values from 75 to 255
+        #thresh_values from 55 to 215
         thresh_values = np.arange(55, 215, 1)
         min_avg_time = float('inf')
         min_std_time = float('inf')

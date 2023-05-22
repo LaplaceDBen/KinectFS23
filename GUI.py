@@ -1,19 +1,16 @@
 import sys
-import os
 import datetime
 import matplotlib.pyplot as plt
 from detection_func import QRCodeDetector,QRCodeDetector_time,QRCodeDetector_empirical
 from PySide6.QtCore import QFile
 from PySide6.QtGui import QIcon, QFont
 from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QTextEdit,QPushButton, QScrollArea, QInputDialog,QMessageBox,QCheckBox,QComboBox,QDialog,QDialogButtonBox,QFormLayout,QLabel,QLineEdit,QSpinBox,QVBoxLayout,QHBoxLayout
-
 from PySide6.QtQuickControls2 import QQuickStyle
-import threading
 from config import camera_config
 import pyk4a
 from pyk4a import Config, PyK4A
-import subprocess
-import threading
+
+
 
 
 
@@ -57,11 +54,8 @@ class GUI_Azure_Kinect(QWidget):
         #add checkbox for fast calibration mode
         self.fast_calibration = QCheckBox("Fast Calibration")
         self.display_button = QCheckBox("Display image")
+        self.display_button.setChecked(True)
     
-        
-        #make space
-        
-
         self.log_window = QTextEdit()
         self.log_window.setPlaceholderText('Log')
         self.log_window.setFontWeight(QFont.Bold)
@@ -85,11 +79,6 @@ class GUI_Azure_Kinect(QWidget):
         hbox.addStretch(1)
         self.layout.addLayout(hbox)
         self.layout.addWidget(self.log_window)
-        
-
-
-
-                # set stylesheet
 
         stylesheet = QFile('style.css')
         if stylesheet.open(QFile.ReadOnly | QFile.Text):
@@ -107,7 +96,7 @@ class GUI_Azure_Kinect(QWidget):
             self.calibrate_button.setEnabled(False)
             self.start_button.setEnabled(False)
             #run the detection
-            self.qrcode_detector = QRCodeDetector(num_qr_codes=self.num_obj,t = self.thresh, config=self.camera_config, resolution=self.resolution,display=self.display_button)
+            self.qrcode_detector = QRCodeDetector(num_qr_codes=self.num_obj,t = self.thresh, config=self.camera_config, resolution=self.resolution,display=self.display_button.isChecked())
             #print(self.thresh)
             self.qrcode_detector.detect_qr_codes()
 
@@ -159,8 +148,7 @@ class GUI_Azure_Kinect(QWidget):
         #enable calibration button
         self.calibrate_button.setEnabled(True)
         self.qrcode_detector.stop()
-        del self.qrcode_detector
-        #if detector is running
+
         
 
            
