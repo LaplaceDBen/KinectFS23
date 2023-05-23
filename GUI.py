@@ -11,12 +11,6 @@ import pyk4a
 from pyk4a import Config, PyK4A
 
 
-
-
-
-
-
-#help by chatgpt
 class GUI_Azure_Kinect(QWidget):
 
     def __init__(self):
