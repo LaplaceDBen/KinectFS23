@@ -10,7 +10,6 @@ from datetime import datetime
 import time
 import matplotlib.pyplot as plt
 from tqdm import tqdm_gui
-from config import camera_config
 import concurrent.futures
 import pandas as pd
 
