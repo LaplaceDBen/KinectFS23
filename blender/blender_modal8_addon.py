@@ -19,7 +19,7 @@ import bpy
 import math
 import threading
 
-log_path = r"C:\Users\benit\Documents\CDS\04_FS23\Projektarbeit_cds-901\KinectFS23\qr_codes.log"      # Test-Logfile
+log_path = r"C:\Users\rapha\OneDrive\Desktop\CDS_FS23\Projektarbeit\GitHubNew\KinectFS23\blender\qr_codes_test2.log"      # Test-Logfile
 # log_path = r"C:\Users\rapha\OneDrive\Desktop\CDS_FS23\Projektarbeit\GitHubNew\KinectFS23\qr_codes.log"                # Echtes Logfile
 
 object_dict = {
@@ -75,7 +75,7 @@ class FollowLogThread(threading.Thread):
             while not self.stopped():
                 line = file.readline()
                 if not line:            # Falls keine neue Zeile da ist, kurz warten
-                    time.sleep(0.005)
+                    time.sleep(0.001)
                     continue
                 self.callback(line)
 
